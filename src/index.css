@@ -8,64 +8,52 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Millionaire Den - Enhanced Dark Theme Design System */
-    --background: 0 0% 6%;
+    /* Millionaire Den - Dark Theme Design System */
+    --background: 0 0% 7%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 9%;
+    --card: 0 0% 10%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 9%;
+    --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 85% 58%;
+    --primary: 0 84% 55%;
     --primary-foreground: 0 0% 98%;
-    --primary-hover: 0 85% 52%;
 
-    --secondary: 0 0% 14%;
+    --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 68%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 0 85% 58%;
+    --accent: 0 84% 55%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 12%;
-    --ring: 0 85% 58%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 0 84% 55%;
 
-    --radius: 0.875rem;
-
-    /* Enhanced color palette */
-    --gold: 45 100% 65%;
-    --success: 142 76% 36%;
-    --warning: 38 92% 50%;
-    --info: 217 91% 60%;
+    --radius: 0.75rem;
 
     /* Navigation specific */
-    --nav-background: 0 0% 4%;
-    --nav-active: 0 85% 58%;
-    --nav-inactive: 0 0% 55%;
+    --nav-background: 0 0% 5%;
+    --nav-active: 0 84% 55%;
+    --nav-inactive: 0 0% 50%;
 
-    /* Enhanced gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(0 85% 58%) 0%, hsl(15 85% 55%) 50%, hsl(0 85% 50%) 100%);
-    --gradient-secondary: linear-gradient(135deg, hsl(0 0% 12%) 0%, hsl(0 0% 8%) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 9%) 0%, hsl(0 0% 11%) 50%, hsl(0 0% 8%) 100%);
-    --gradient-hero: linear-gradient(135deg, hsl(0 85% 58% / 0.1) 0%, hsl(0 0% 6%) 100%);
-    
-    /* Shadows */
-    --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.15);
-    --shadow-lg: 0 8px 24px hsl(0 0% 0% / 0.2);
-    --shadow-glow: 0 0 20px hsl(0 85% 58% / 0.3);
+    /* Success/Level up colors */
+    --success: 120 84% 55%;
+    --warning: 45 84% 55%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(0 84% 55%), hsl(0 84% 45%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 10%), hsl(0 0% 12%));
     
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
@@ -115,71 +103,28 @@ All colors MUST be HSL.
 }
 
 @layer components {
-  /* Enhanced Millionaire Den Components */
+  /* Millionaire Den specific components */
   .nav-item {
-    @apply flex flex-col items-center justify-center p-3 transition-all duration-300 rounded-lg;
+    @apply flex flex-col items-center justify-center p-2 transition-colors duration-200;
   }
 
   .nav-item-active {
-    @apply text-primary bg-primary/10 transform scale-105;
+    @apply text-primary;
   }
 
   .nav-item-inactive {
-    @apply text-muted-foreground hover:text-foreground hover:bg-muted/30 hover:scale-105;
+    @apply text-muted-foreground hover:text-foreground;
   }
 
   .card-elegant {
-    @apply bg-card/80 backdrop-blur-md border border-border/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300;
-    background: var(--gradient-card);
-  }
-
-  .card-interactive {
-    @apply card-elegant hover:border-primary/30 hover:bg-card/90 cursor-pointer transform hover:scale-[1.02] transition-all duration-300;
+    @apply bg-card/50 backdrop-blur border border-border/50 rounded-xl;
   }
 
   .gradient-primary {
     background: var(--gradient-primary);
   }
 
-  .gradient-secondary {
-    background: var(--gradient-secondary);
-  }
-
   .gradient-card {
     background: var(--gradient-card);
   }
-
-  .gradient-hero {
-    background: var(--gradient-hero);
-  }
-
-  .glass-effect {
-    @apply bg-card/20 backdrop-blur-xl border border-border/20;
-  }
-
-  .glow-effect {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  .animate-pulse-glow {
-    animation: pulse-glow 2s ease-in-out infinite alternate;
-  }
-
-  .text-gradient {
-    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
-  }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 5px hsl(var(--primary) / 0.5); }
-  100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.8), 0 0 30px hsl(var(--primary) / 0.4); }
 }
