@@ -1,18 +1,26 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Target, Flame, Star, BookOpen, Plus, TrendingUp, Calendar, Zap } from "lucide-react";
+import { Trophy, Target, Flame, Star, BookOpen, Plus, TrendingUp, Calendar, Zap, Settings } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
+import { useLunarCrystals } from "@/hooks/useLunarCrystals";
+import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
+import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 import { Link } from "react-router-dom";
 
 const Home = () => {
   const { habits, completeHabit, getHabitStats } = useHabits();
+  const { crystals, getLevelInfo } = useLunarCrystals();
   const stats = getHabitStats();
+  const levelInfo = getLevelInfo();
+  
+  // Initialize lunar crystal integration
+  useLunarCrystalIntegration();
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pt-14">
       {/* Hero Section */}
-      <div className="gradient-hero px-4 pt-8 pb-8">
+      <div className="gradient-hero px-4 pt-4 pb-8">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-3 animate-float">
             <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center glow-effect">
@@ -23,7 +31,11 @@ const Home = () => {
           <p className="text-muted-foreground text-lg">Transform your life, one habit at a time</p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <div className="glass-effect px-4 py-2 rounded-full">
-              <span className="text-sm font-medium text-primary">Level {stats.level}</span>
+              <span className="text-sm font-medium text-primary">Level {levelInfo.level}</span>
+            </div>
+            <div className="glass-effect px-4 py-2 rounded-full flex items-center gap-2">
+              <LunarCrystalLogo size={16} />
+              <span className="text-sm font-medium text-foreground">{crystals}</span>
             </div>
             <div className="glass-effect px-4 py-2 rounded-full">
               <span className="text-sm font-medium text-foreground">{stats.totalXP} XP</span>
@@ -155,6 +167,15 @@ const Home = () => {
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <BookOpen className="w-6 h-6 text-primary mb-2" />
                   <p className="text-sm font-medium text-foreground">New Journal</p>
+                </div>
+              </Card>
+            </Link>
+
+            <Link to="/settings">
+              <Card className="card-interactive p-4 h-24">
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <Settings className="w-6 h-6 text-primary mb-2" />
+                  <p className="text-sm font-medium text-foreground">Settings</p>
                 </div>
               </Card>
             </Link>

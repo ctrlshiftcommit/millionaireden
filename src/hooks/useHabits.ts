@@ -182,8 +182,13 @@ export const useHabits = () => {
           const newCompletedDates = [...habit.completedDates, today];
           const newStreak = calculateStreak(newCompletedDates);
           
-          // Add XP
+          // Add XP and trigger crystal earning
           addXP(20);
+          
+          // Trigger custom event for lunar crystals
+          window.dispatchEvent(new CustomEvent('habitCompleted', { 
+            detail: { habitId, streak: newStreak } 
+          }));
           
           return {
             ...habit,
