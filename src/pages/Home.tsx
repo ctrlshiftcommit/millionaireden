@@ -19,53 +19,38 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-background pt-14">
-      {/* Hero Section */}
-      <div className="gradient-hero px-4 pt-4 pb-8">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 mb-3 animate-float">
-            <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center glow-effect">
-              <Trophy className="w-4 h-4 text-white" />
+      {/* Compact Stats Section */}
+      <div className="px-4 pt-4 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-2xl font-bold text-foreground">Millionaire Den</h1>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 text-primary">
+              <span className="text-sm font-medium">Level {levelInfo.level}</span>
             </div>
-            <h1 className="text-4xl font-bold text-gradient">Millionaire Den</h1>
-          </div>
-          <p className="text-muted-foreground text-lg">Transform your life, one habit at a time</p>
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <div className="glass-effect px-4 py-2 rounded-full">
-              <span className="text-sm font-medium text-primary">Level {levelInfo.level}</span>
-            </div>
-            <div className="glass-effect px-4 py-2 rounded-full flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <LunarCrystalLogo size={16} />
-              <span className="text-sm font-medium text-foreground">{crystals}</span>
-            </div>
-            <div className="glass-effect px-4 py-2 rounded-full">
-              <span className="text-sm font-medium text-foreground">{stats.totalXP} XP</span>
+              <span className="text-sm font-bold text-primary">{crystals}</span>
             </div>
           </div>
         </div>
 
-        {/* Quick Stats */}
+        {/* Compact Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <Card className="card-elegant p-4 text-center">
-            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse-glow">
-              <Flame className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.longestStreak}</p>
-            <p className="text-xs text-muted-foreground">Day Streak</p>
+          <Card className="card-elegant p-3 text-center">
+            <Flame className="w-5 h-5 text-primary mx-auto mb-1" />
+            <p className="text-lg font-bold text-foreground">{stats.longestStreak}</p>
+            <p className="text-xs text-muted-foreground">Streak</p>
           </Card>
 
-          <Card className="card-elegant p-4 text-center">
-            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Target className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{stats.completedToday}</p>
+          <Card className="card-elegant p-3 text-center">
+            <Target className="w-5 h-5 text-primary mx-auto mb-1" />
+            <p className="text-lg font-bold text-foreground">{stats.completedToday}</p>
             <p className="text-xs text-muted-foreground">Today</p>
           </Card>
 
-          <Card className="card-elegant p-4 text-center">
-            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-2xl font-bold text-foreground">{Math.round(stats.completionRate)}%</p>
+          <Card className="card-elegant p-3 text-center">
+            <TrendingUp className="w-5 h-5 text-primary mx-auto mb-1" />
+            <p className="text-lg font-bold text-foreground">{Math.round(stats.completionRate)}%</p>
             <p className="text-xs text-muted-foreground">Success</p>
           </Card>
         </div>

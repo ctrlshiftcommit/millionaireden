@@ -141,7 +141,7 @@ export const Header = () => {
                 className="w-full justify-start hover:bg-primary/10"
                 onClick={() => {
                   setIsMenuOpen(false);
-                  // Navigate to settings
+                  window.location.href = '/settings';
                 }}
               >
                 <Settings className="w-5 h-5 mr-3" />

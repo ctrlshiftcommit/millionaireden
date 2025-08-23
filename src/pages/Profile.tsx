@@ -18,6 +18,7 @@ import {
   Trash2
 } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useHabits } from "@/hooks/useHabits";
 
 const Profile = () => {
@@ -38,14 +39,16 @@ const Profile = () => {
   const colors = ["bg-green-500", "bg-blue-500", "bg-purple-500", "bg-orange-500", "bg-pink-500", "bg-yellow-500"];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 pt-16">
       {/* Header */}
-      <div className="gradient-hero px-4 pt-8 pb-6">
+      <div className="px-4 pt-4 pb-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-bold text-gradient">Profile</h1>
-          <Button variant="outline" size="sm">
-            <Settings className="w-4 h-4" />
-          </Button>
+          <Link to="/settings">
+            <Button variant="outline" size="sm">
+              <Settings className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
 
         {/* User Profile Card */}
