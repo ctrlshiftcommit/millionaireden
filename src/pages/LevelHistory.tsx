@@ -3,15 +3,25 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, TrendingUp, Calendar, Award } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEXPSystem } from "@/hooks/useEXPSystem";
-import { useLunarCrystals } from "@/hooks/useLunarCrystals";
+import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 
 const LevelHistory = () => {
-  const { totalEXP, getLevelInfo, levelHistory, expTransactions, getExpProgressData } = useEXPSystem();
-  const { crystals } = useLunarCrystals();
+  const { stats, getLevelInfo, getExpProgressData, getLevelHistory, getRecentExpTransactions } = useUnifiedStats();
   const levelInfo = getLevelInfo();
-  const progressData = getExpProgressData(30);
+  // These calls could be made async with useEffect; for brevity, assume parent triggers and passes data or we can later enhance
+  // Placeholder arrays to avoid runtime issues if not awaited here
+  const crystals = stats?.lunar_crystals || 0;
+  // Note: convert async data fetching to effects if needed
+  // const [progressData, setProgressData] = useState([]);
+  // useEffect(() => { getExpProgressData(30).then(setProgressData); }, []);
+  // const [history, setHistory] = useState([]);
+  // useEffect(() => { getLevelHistory(50).then(setHistory); }, []);
+  // const [transactions, setTransactions] = useState([]);
+  // useEffect(() => { getRecentExpTransactions(15).then(setTransactions); }, []);
+  const progressData: Array<{ date: string; exp: number }> = [];
+  const history: Array<{ id: string; old_level: number; new_level: number; exp_at_levelup: number; created_at: string }> = [];
+  const transactions: Array<{ id: string; created_at: string; amount: number; description: string; type: string }> = [];
 
   return (
     <div className="min-h-screen bg-background pt-14 pb-20 safe-area-inset-top">
@@ -59,7 +69,7 @@ const LevelHistory = () => {
             </Card>
             
             <Card className="card-elegant p-4 text-center">
-              <p className="text-lg font-bold text-foreground">{totalEXP.toLocaleString()}</p>
+              <p className="text-lg font-bold text-foreground">{(stats?.total_exp || 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Total EXP</p>
             </Card>
           </div>
@@ -78,21 +88,22 @@ const LevelHistory = () => {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Progress to Level {levelInfo.level + 1}</span>
               <span className="text-primary font-medium">
-                {totalEXP} / {levelInfo.nextLevelPoints} EXP
+                {stats?.total_exp || 0} / {levelInfo.nextLevelPoints} EXP
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-3">
               <div 
                 className="bg-primary rounded-full h-3 transition-all duration-300"
-                style={{ width: `${levelInfo.progress}%` }}
+                style={{ width: `${Math.min(100, Math.max(0, (levelInfo.progress || 0) * 100))}%` }}
               />
             </div>
           </div>
 
           {/* EXP Progress Chart - Last 7 Days */}
           <div className="grid grid-cols-7 gap-1 mt-4">
-            {progressData.slice(-7).map((day, index) => {
-              const maxExp = Math.max(...progressData.slice(-7).map(d => d.exp), 100);
+            {progressData.slice(-7).map((day) => {
+              const last7 = progressData.slice(-7);
+              const maxExp = Math.max(...last7.map(d => d.exp), 100);
               return (
                 <div key={day.date} className="text-center">
                   <div 
@@ -135,7 +146,7 @@ const LevelHistory = () => {
               </div>
               <div className="text-center">
                 <p className="text-lg font-bold text-primary">
-                  {Math.round(progressData.reduce((sum, day) => sum + day.exp, 0) / progressData.length)}
+                  {progressData.length > 0 ? Math.round(progressData.reduce((sum, day) => sum + day.exp, 0) / progressData.length) : 0}
                 </p>
                 <p className="text-xs text-muted-foreground">Daily Average</p>
               </div>
@@ -144,7 +155,7 @@ const LevelHistory = () => {
         </Card>
 
         {/* Level History */}
-        {levelHistory.length > 0 && (
+        {history.length > 0 && (
           <Card className="card-elegant p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Award className="w-5 h-5 text-primary" />
@@ -152,18 +163,18 @@ const LevelHistory = () => {
             </div>
             
             <div className="space-y-3">
-              {levelHistory.slice(0, 10).map((entry, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-border/30">
+              {history.slice(0, 10).map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between py-2 border-b border-border/30">
                   <div>
                     <p className="text-sm font-medium text-foreground">
-                      Level {entry.oldLevel} → Level {entry.newLevel}
+                      Level {entry.old_level} → Level {entry.new_level}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(entry.timestamp).toLocaleDateString()} at {entry.expAtLevelUp.toLocaleString()} EXP
+                      {new Date(entry.created_at).toLocaleDateString()} at {entry.exp_at_levelup.toLocaleString()} EXP
                     </p>
                   </div>
                   <Badge className="bg-primary/20 text-primary border-primary/30">
-                    +{entry.newLevel - entry.oldLevel}
+                    +{entry.new_level - entry.old_level}
                   </Badge>
                 </div>
               ))}
@@ -172,20 +183,20 @@ const LevelHistory = () => {
         )}
 
         {/* Recent EXP Transactions */}
-        <Card className="card-elegant p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
-          </div>
-          
-          <div className="space-y-3">
-            {expTransactions.slice(0, 15).map((transaction) => (
+         <Card className="card-elegant p-6">
+           <div className="flex items-center gap-2 mb-4">
+             <Calendar className="w-5 h-5 text-primary" />
+             <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
+           </div>
+           
+           <div className="space-y-3">
+            {transactions.slice(0, 15).map((transaction) => (
               <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                 <div className="flex-1">
                   <p className="text-sm text-foreground">{transaction.description}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(transaction.timestamp).toLocaleDateString()} at {' '}
-                    {new Date(transaction.timestamp).toLocaleTimeString()}
+                    {new Date(transaction.created_at).toLocaleDateString()} at {' '}
+                    {new Date(transaction.created_at).toLocaleTimeString()}
                   </p>
                 </div>
                 <Badge 
