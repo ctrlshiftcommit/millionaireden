@@ -141,18 +141,42 @@ export const useProfile = () => {
   };
 
   const uploadAvatar = async (file: File) => {
-    if (!user) return null;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to upload an avatar.",
+        variant: "destructive"
+      });
+      return null;
+    }
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      // First, check if the avatars bucket exists
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      
+      if (bucketsError) {
+        console.error('Error checking buckets:', bucketsError);
+        throw new Error('Unable to access storage');
+      }
+
+      const avatarsBucket = buckets?.find(bucket => bucket.id === 'avatars');
+      if (!avatarsBucket) {
+        console.error('Avatars bucket not found');
+        throw new Error('Storage bucket not configured');
+      }
+
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('Uploading avatar:', { filePath, fileSize: file.size, fileType: file.type });
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
 
       if (uploadError) {
+        console.error('Upload error:', uploadError);
         throw uploadError;
       }
 
@@ -160,13 +184,21 @@ export const useProfile = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log('Upload successful, public URL:', data.publicUrl);
+
       await updateProfile({ avatar_url: data.publicUrl });
+      
+      toast({
+        title: "Success",
+        description: "Avatar uploaded successfully!"
+      });
+      
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
         title: "Error",
-        description: "Failed to upload avatar. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to upload avatar. Please try again.",
         variant: "destructive"
       });
       return null;

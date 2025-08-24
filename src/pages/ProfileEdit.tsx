@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,9 +11,19 @@ import { useProfile } from "@/hooks/useProfile";
 const ProfileEdit = () => {
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
   const [formData, setFormData] = useState({
-    display_name: profile?.display_name || '',
-    phone_number: profile?.phone_number || ''
+    display_name: '',
+    phone_number: ''
   });
+
+  // Update form data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        display_name: profile.display_name || '',
+        phone_number: profile.phone_number || ''
+      });
+    }
+  }, [profile]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -28,7 +38,7 @@ const ProfileEdit = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
+      alert('Please select an image file (JPEG, PNG, GIF, etc.)');
       return;
     }
 
@@ -38,9 +48,23 @@ const ProfileEdit = () => {
       return;
     }
 
+    // Additional validation for common image types
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+      return;
+    }
+
     setUploading(true);
-    await uploadAvatar(file);
-    setUploading(false);
+    try {
+      await uploadAvatar(file);
+    } finally {
+      setUploading(false);
+      // Reset the file input so the same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   if (loading) {
@@ -99,8 +123,14 @@ const ProfileEdit = () => {
                   className="hidden"
                 />
                 <p className="text-sm text-muted-foreground">
-                  {uploading ? 'Uploading...' : 'Click camera to change avatar'}
+                  {uploading ? 'Uploading avatar...' : 'Click camera to change avatar'}
                 </p>
+                {uploading && (
+                  <div className="flex items-center gap-2 text-sm text-primary">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    Processing...
+                  </div>
+                )}
               </div>
 
               {/* Form Fields */}
