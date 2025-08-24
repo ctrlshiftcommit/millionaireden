@@ -8,11 +8,13 @@ import { LunarCrystalLogo } from './LunarCrystalLogo';
 import { useLunarCrystals } from '@/hooks/useLunarCrystals';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationPanel } from './NotificationPanel';
+import { useUnifiedStats } from '@/hooks/useUnifiedStats';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const { crystals, getLevelInfo } = useLunarCrystals();
+  const { crystals } = useLunarCrystals();
+  const { getLevelInfo } = useUnifiedStats();
   const { unreadCount } = useNotifications();
   const levelInfo = getLevelInfo();
 
@@ -92,14 +94,14 @@ export const Header = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Progress to next level</span>
                   <span className="text-primary font-medium">
-                    {crystals} / {levelInfo.nextLevelPoints}
+                    {(levelInfo.pointsRequired)}-{levelInfo.nextLevelPoints} XP
                   </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div 
                     className="bg-primary rounded-full h-2 transition-all duration-300"
                     style={{ 
-                      width: `${Math.min(100, ((crystals - levelInfo.pointsRequired) / (levelInfo.nextLevelPoints - levelInfo.pointsRequired)) * 100)}%` 
+                      width: `${Math.min(100, Math.max(0, (levelInfo.progress || 0) * 100))}%` 
                     }}
                   />
                 </div>

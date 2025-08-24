@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, ArrowRight, AlertTriangle, ShoppingCart, Zap } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useEXPSystem } from "@/hooks/useEXPSystem";
+import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 import { useLunarCrystals } from "@/hooks/useLunarCrystals";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 
@@ -18,8 +18,8 @@ const Shop = () => {
     earnCrystals
   } = useLunarCrystals();
   
-  const { totalEXP, removeEXP, getLevelInfo } = useEXPSystem();
-
+  const { stats, convertExpToCrystals, getLevelInfo } = useUnifiedStats();
+ 
   const levelInfo = getLevelInfo();
 
   return (
@@ -56,7 +56,7 @@ const Shop = () => {
           <Card className="card-elegant p-3 text-center">
             <div className="flex items-center justify-center gap-1 mb-2">
               <Zap className="w-4 h-4 text-primary" />
-              <span className="text-lg font-bold text-primary">{totalEXP}</span>
+              <span className="text-lg font-bold text-primary">{stats?.total_exp || 0}</span>
             </div>
             <p className="text-xs text-muted-foreground">EXP</p>
           </Card>
@@ -82,8 +82,8 @@ const Shop = () => {
               <span className="text-sm text-primary">100 EXP = 1 Crystal</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Available EXP: {totalEXP}</span>
-              <span className="text-sm text-muted-foreground">Max Crystals: {Math.floor(totalEXP / 100)}</span>
+              <span className="text-sm text-muted-foreground">Available EXP: {stats?.total_exp || 0}</span>
+              <span className="text-sm text-muted-foreground">Max Crystals: {Math.floor((stats?.total_exp || 0) / 100)}</span>
             </div>
           </div>
           
@@ -94,11 +94,9 @@ const Shop = () => {
                   key={exp}
                   variant="outline"
                   size="sm"
-                  disabled={totalEXP < exp}
+                  disabled={(stats?.total_exp || 0) < exp}
                   onClick={() => {
-                    if (removeEXP(exp, 'EXP to Crystal conversion')) {
-                      earnCrystals(Math.floor(exp / 100), 'EXP conversion');
-                    }
+                    convertExpToCrystals(exp, 100);
                   }}
                   className="flex flex-col gap-1 h-auto p-2"
                 >
@@ -111,7 +109,7 @@ const Shop = () => {
             </div>
           </div>
           
-          {totalEXP < 100 && (
+          {(stats?.total_exp || 0) < 100 && (
             <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
               <AlertTriangle className="w-4 h-4" />
               <span>Complete more habits and tasks to earn EXP!</span>

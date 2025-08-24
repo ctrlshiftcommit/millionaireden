@@ -25,7 +25,6 @@ import { useHabits } from "@/hooks/useHabits";
 import { useProgressTracking } from "@/hooks/useProgressTracking";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfile } from "@/hooks/useProfile";
-import { useProfilePictures } from "@/hooks/useProfilePictures";
 import { useAchievements } from "@/hooks/useAchievements";
 import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 
@@ -34,7 +33,6 @@ const Profile = () => {
   const { progressStats, loading: progressLoading } = useProgressTracking();
   const { checkDailyProgress } = useNotifications();
   const { profile, userExp, loading: profileLoading } = useProfile();
-  const { primaryPicture } = useProfilePictures();
   const { stats: unifiedStats, getLevelInfo } = useUnifiedStats();
   const { userAchievements, getAchievementProgress } = useAchievements();
   const [activeTab, setActiveTab] = useState("overview");
@@ -77,7 +75,7 @@ const Profile = () => {
         <Card className="card-elegant p-6 mb-6 animate-fadeInScale">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="w-16 h-16 animate-glowPulse">
-              <AvatarImage src={primaryPicture?.public_url || profile?.avatar_url || ''} />
+              <AvatarImage src={profile?.avatar_url || ''} />
               <AvatarFallback className="bg-primary/20 text-primary font-semibold text-lg">
                 {profile?.display_name?.[0] || profile?.email?.[0] || 'U'}
               </AvatarFallback>
@@ -301,7 +299,7 @@ const Profile = () => {
             )}
 
             {habits.map((habit) => (
-              <Card key={habit.id} className="card-interactive p-4 hover-glow animate-slideInUp" onClick={() => handleCompleteHabit(habit.id)}>
+              <Card key={habit.id} className="card-interactive p-4 hover-glow animate-slideInUp group" onClick={() => handleCompleteHabit(habit.id)}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-3 h-3 rounded-full ${habit.color}`} />
                   <div className="flex-1">

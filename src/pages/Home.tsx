@@ -4,19 +4,19 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Target, Flame, Star, BookOpen, Plus, TrendingUp, Calendar, Zap, Settings } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
 import { useLunarCrystals } from "@/hooks/useLunarCrystals";
-import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 import { Link } from "react-router-dom";
+import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 
 const Home = () => {
   const { habits, completeHabit, getHabitStats } = useHabits();
-  const { crystals, getLevelInfo } = useLunarCrystals();
+  const { crystals } = useLunarCrystals();
+  const { getLevelInfo } = useUnifiedStats();
   const stats = getHabitStats();
   const levelInfo = getLevelInfo();
   
-  // Initialize lunar crystal integration
-  useLunarCrystalIntegration();
-
+ 
+ 
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 safe-area-inset-top animate-slideInUp">
       {/* Compact Stats Strip */}
@@ -56,14 +56,14 @@ const Home = () => {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Progress to next level</span>
             <span className="text-xs text-primary font-medium">
-              {crystals} / {levelInfo.nextLevelPoints}
+              {(levelInfo.pointsRequired)}-{levelInfo.nextLevelPoints} XP
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div 
               className="bg-primary rounded-full h-2 transition-all duration-500 animate-streakGlow"
               style={{ 
-                width: `${Math.min(100, ((crystals - levelInfo.pointsRequired) / (levelInfo.nextLevelPoints - levelInfo.pointsRequired)) * 100)}%` 
+                width: `${Math.min(100, Math.max(0, (levelInfo.progress || 0) * 100))}%` 
               }}
             />
           </div>
