@@ -20,13 +20,11 @@ import ExportData from "./pages/ExportData";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
-import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
 import { useEXPIntegration } from "@/hooks/useEXPIntegration";
 
 const queryClient = new QueryClient();
 
 function App() {
-  useLunarCrystalIntegration();
   useEXPIntegration();
   
   return (

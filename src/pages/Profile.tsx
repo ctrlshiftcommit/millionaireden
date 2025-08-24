@@ -299,7 +299,7 @@ const Profile = () => {
             )}
 
             {habits.map((habit) => (
-              <Card key={habit.id} className="card-interactive p-4 hover-glow animate-slideInUp" onClick={() => handleCompleteHabit(habit.id)}>
+              <Card key={habit.id} className="card-interactive p-4 hover-glow animate-slideInUp group" onClick={() => handleCompleteHabit(habit.id)}>
                 <div className="flex items-center gap-3 mb-3">
                   <div className={`w-3 h-3 rounded-full ${habit.color}`} />
                   <div className="flex-1">
