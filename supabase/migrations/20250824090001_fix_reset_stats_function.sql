@@ -1,7 +1,5 @@
--- Add optional flag to control lunar crystal reset during stats reset
--- Drops old single-arg function and creates a new two-arg version
-
-DROP FUNCTION IF EXISTS public.reset_user_stats(uuid) CASCADE;
+-- Fix reset_user_stats function with better error handling and table operations
+DROP FUNCTION IF EXISTS public.reset_user_stats(uuid, boolean) CASCADE;
 
 CREATE OR REPLACE FUNCTION public.reset_user_stats(
   p_user_id uuid,
@@ -43,25 +41,55 @@ BEGIN
     VALUES (p_user_id, 0, 0, CASE WHEN p_reset_crystals THEN 0 ELSE 250 END, now());
   END IF;
   
-  -- Clear habit completions
-  DELETE FROM public.habit_completions WHERE user_id = p_user_id;
+  -- Clear habit completions (with error handling)
+  BEGIN
+    DELETE FROM public.habit_completions WHERE user_id = p_user_id;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Failed to clear habit completions: %', SQLERRM;
+  END;
   
-  -- Clear EXP transactions
-  DELETE FROM public.exp_transactions WHERE user_id = p_user_id;
+  -- Clear EXP transactions (with error handling)
+  BEGIN
+    DELETE FROM public.exp_transactions WHERE user_id = p_user_id;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Failed to clear exp transactions: %', SQLERRM;
+  END;
   
-  -- Clear level history
-  DELETE FROM public.level_history WHERE user_id = p_user_id;
+  -- Clear level history (with error handling)
+  BEGIN
+    DELETE FROM public.level_history WHERE user_id = p_user_id;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Failed to clear level history: %', SQLERRM;
+  END;
   
-  -- Clear reward purchases
-  DELETE FROM public.reward_purchases WHERE user_id = p_user_id;
+  -- Clear reward purchases (with error handling)
+  BEGIN
+    DELETE FROM public.reward_purchases WHERE user_id = p_user_id;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Failed to clear reward purchases: %', SQLERRM;
+  END;
   
-  -- Clear user achievements
-  DELETE FROM public.user_achievements WHERE user_id = p_user_id;
+  -- Clear user achievements (with error handling)
+  BEGIN
+    DELETE FROM public.user_achievements WHERE user_id = p_user_id;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Failed to clear user achievements: %', SQLERRM;
+  END;
   
-  -- Reset all habits completion status
-  UPDATE public.habits 
-  SET updated_at = now() 
-  WHERE user_id = p_user_id;
+  -- Reset all habits completion status (with error handling)
+  BEGIN
+    UPDATE public.habits 
+    SET updated_at = now() 
+    WHERE user_id = p_user_id;
+  EXCEPTION
+    WHEN OTHERS THEN
+      RAISE NOTICE 'Failed to update habits: %', SQLERRM;
+  END;
   
   -- Add reset notification (only if notifications table exists and user has access)
   BEGIN
