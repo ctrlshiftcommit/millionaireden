@@ -28,18 +28,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useResetStats } from '@/hooks/useResetStats';
 import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
 import { useToast } from '@/hooks/use-toast';
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useUnifiedStats } from '@/hooks/useUnifiedStats';
-=======
->>>>>>> parent of 82b9486 (Add optional lunar crystal reset to user stats reset feature (#2))
-=======
->>>>>>> parent of 82b9486 (Add optional lunar crystal reset to user stats reset feature (#2))
-=======
->>>>>>> parent of 82b9486 (Add optional lunar crystal reset to user stats reset feature (#2))
 
 const Settings = () => {
   const { 
