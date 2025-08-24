@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Menu, Bell, Settings, X } from 'lucide-react';
+import { Menu, Bell, Settings, X, User, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 import { LunarCrystalLogo } from './LunarCrystalLogo';
 import { useLunarCrystals } from '@/hooks/useLunarCrystals';
 
@@ -140,13 +141,34 @@ export const Header = () => {
               <Button
                 variant="ghost"
                 className="w-full justify-start hover:bg-primary/10"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  window.location.href = '/settings';
-                }}
+                asChild
               >
-                <Settings className="w-5 h-5 mr-3" />
-                Settings & Rewards
+                <Link to="/profile" onClick={() => setIsMenuOpen(false)}>
+                  <User className="w-5 h-5 mr-3" />
+                  Profile
+                </Link>
+              </Button>
+
+              <Button
+                variant="ghost"
+                className="w-full justify-start hover:bg-primary/10"
+                asChild
+              >
+                <Link to="/level-history" onClick={() => setIsMenuOpen(false)}>
+                  <TrendingUp className="w-5 h-5 mr-3" />
+                  Progress & History
+                </Link>
+              </Button>
+              
+              <Button
+                variant="ghost"
+                className="w-full justify-start hover:bg-primary/10"
+                asChild
+              >
+                <Link to="/settings" onClick={() => setIsMenuOpen(false)}>
+                  <Settings className="w-5 h-5 mr-3" />
+                  Settings & Rewards
+                </Link>
               </Button>
               
               <Button

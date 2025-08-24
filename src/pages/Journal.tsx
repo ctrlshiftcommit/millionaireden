@@ -84,9 +84,9 @@ const Journal = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 pt-16">
       {/* Header */}
-      <div className="gradient-hero px-4 pt-8 pb-6">
+      <div className="gradient-hero px-4 pt-6 pb-6">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-3">
             <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center glow-effect">

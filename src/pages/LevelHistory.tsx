@@ -89,26 +89,57 @@ const LevelHistory = () => {
             </div>
           </div>
 
-          {/* Simple progress visualization */}
+          {/* EXP Progress Chart - Last 7 Days */}
           <div className="grid grid-cols-7 gap-1 mt-4">
-            {progressData.slice(-7).map((day, index) => (
-              <div key={day.date} className="text-center">
-                <div 
-                  className="w-full bg-muted rounded mb-1 flex items-end justify-center"
-                  style={{ height: '40px' }}
-                >
+            {progressData.slice(-7).map((day, index) => {
+              const maxExp = Math.max(...progressData.slice(-7).map(d => d.exp), 100);
+              return (
+                <div key={day.date} className="text-center">
                   <div 
-                    className="bg-primary rounded w-full transition-all"
-                    style={{ 
-                      height: `${Math.max(2, Math.min(40, (day.exp / 500) * 40))}px`
-                    }}
-                  />
+                    className="w-full bg-muted rounded mb-1 flex items-end justify-center relative"
+                    style={{ height: '60px' }}
+                  >
+                    <div 
+                      className="bg-gradient-to-t from-primary to-primary-glow rounded w-full transition-all duration-300 relative group"
+                      style={{ 
+                        height: `${Math.max(4, (day.exp / maxExp) * 56)}px`
+                      }}
+                    >
+                      {day.exp > 0 && (
+                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border rounded px-1 text-xs font-medium">
+                          {day.exp}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
+                  </p>
+                  <p className="text-xs text-primary font-bold">
+                    {day.exp}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
+              );
+            })}
+          </div>
+          
+          {/* Monthly Progress Overview */}
+          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Monthly Overview</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <p className="text-lg font-bold text-primary">
+                  {progressData.reduce((sum, day) => sum + day.exp, 0)}
                 </p>
+                <p className="text-xs text-muted-foreground">Total EXP This Month</p>
               </div>
-            ))}
+              <div className="text-center">
+                <p className="text-lg font-bold text-primary">
+                  {Math.round(progressData.reduce((sum, day) => sum + day.exp, 0) / progressData.length)}
+                </p>
+                <p className="text-xs text-muted-foreground">Daily Average</p>
+              </div>
+            </div>
           </div>
         </Card>
 

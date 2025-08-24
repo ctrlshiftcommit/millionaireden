@@ -1,221 +1,270 @@
-import { useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { 
-  Gift, 
-  ShoppingBag, 
-  Sparkles, 
-  Crown,
+  Gift,
+  Trophy,
+  Clock,
   CheckCircle,
-  Lock
-} from 'lucide-react';
-import { useLunarCrystals } from '@/hooks/useLunarCrystals';
-import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
-import { useToast } from '@/hooks/use-toast';
+  Calendar,
+  Star,
+  Filter,
+  RefreshCw
+} from "lucide-react";
+import { useLunarCrystals } from "@/hooks/useLunarCrystals";
+import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 
 const Rewards = () => {
   const { 
     crystals, 
     rewards, 
     purchaseReward,
-    getLevelInfo
+    resetPurchasedRewards
   } = useLunarCrystals();
-  
-  const { toast } = useToast();
-  const [activeCategory, setActiveCategory] = useState('all');
-  const levelInfo = getLevelInfo();
 
-  const categories = [
-    { id: 'all', name: 'All', icon: Gift },
-    { id: 'entertainment', name: 'Fun', icon: Sparkles },
-    { id: 'food', name: 'Food', icon: Gift },
-    { id: 'wellness', name: 'Wellness', icon: Crown },
-    { id: 'experiences', name: 'Experiences', icon: ShoppingBag },
-  ];
+  const [filter, setFilter] = useState<'all' | 'available' | 'purchased'>('all');
+  const [purchaseHistory, setPurchaseHistory] = useState<Array<{
+    id: string;
+    rewardId: string;
+    rewardName: string;
+    cost: number;
+    purchasedAt: string;
+    isUsed: boolean;
+    usedAt?: string;
+  }>>([]);
 
-  const filteredRewards = activeCategory === 'all' 
-    ? rewards 
-    : rewards.filter(r => r.category === activeCategory);
-
-  const availableRewards = filteredRewards.filter(r => !r.purchased);
-  const purchasedRewards = filteredRewards.filter(r => r.purchased);
+  const filteredRewards = rewards.filter(reward => {
+    if (filter === 'available') return !reward.purchased;
+    if (filter === 'purchased') return reward.purchased;
+    return true;
+  });
 
   const handlePurchase = (rewardId: string) => {
-    const reward = rewards.find(r => r.id === rewardId);
-    if (!reward) return;
-
-    if (crystals < reward.cost) {
-      toast({
-        title: "Not enough Lunar Crystals",
-        description: `You need ${reward.cost - crystals} more crystals to purchase this reward.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (purchaseReward(rewardId)) {
-      toast({
-        title: "Reward Purchased!",
-        description: `You've unlocked: ${reward.name}. Enjoy your reward! 🎉`,
-      });
+    const success = purchaseReward(rewardId);
+    if (success) {
+      const reward = rewards.find(r => r.id === rewardId);
+      if (reward) {
+        const purchase = {
+          id: Date.now().toString(),
+          rewardId,
+          rewardName: reward.name,
+          cost: reward.cost,
+          purchasedAt: new Date().toISOString(),
+          isUsed: false,
+        };
+        setPurchaseHistory(prev => [purchase, ...prev]);
+      }
     }
   };
 
+  const handleMarkAsUsed = (purchaseId: string) => {
+    setPurchaseHistory(prev => 
+      prev.map(purchase => 
+        purchase.id === purchaseId 
+          ? { ...purchase, isUsed: true, usedAt: new Date().toISOString() }
+          : purchase
+      )
+    );
+  };
+
+  const availableRewards = rewards.filter(r => !r.purchased);
+  const purchasedRewards = rewards.filter(r => r.purchased);
+
   return (
-    <div className="min-h-screen bg-background pb-20 pt-16">
+    <div className="min-h-screen bg-background pt-16 pb-20">
       <div className="px-4">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <Gift className="w-6 h-6 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">Rewards Store</h1>
+            <h1 className="text-2xl font-bold text-foreground">Rewards</h1>
           </div>
-          <p className="text-muted-foreground">Spend your Lunar Crystals on awesome rewards</p>
+          <p className="text-muted-foreground">Spend your Lunar Crystals on amazing rewards</p>
         </div>
 
-        {/* Crystal Balance & Level */}
+        {/* Current Balance */}
         <Card className="card-elegant p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <LunarCrystalLogo size={32} className="animate-pulse-glow" />
-              <div>
-                <h2 className="text-2xl font-bold text-primary">{crystals}</h2>
-                <p className="text-sm text-muted-foreground">Lunar Crystals</p>
-              </div>
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <LunarCrystalLogo size={32} />
+              <span className="text-3xl font-bold text-primary">{crystals}</span>
             </div>
-            <div className="text-right">
-              <h3 className="text-lg font-bold text-foreground">{levelInfo.title}</h3>
-              <p className="text-sm text-muted-foreground">Level {levelInfo.level}</p>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress to next level</span>
-              <span className="text-primary font-medium">
-                {crystals} / {levelInfo.nextLevelPoints}
-              </span>
-            </div>
-            <Progress 
-              value={Math.min(100, ((crystals - levelInfo.pointsRequired) / (levelInfo.nextLevelPoints - levelInfo.pointsRequired)) * 100)} 
-              className="h-3" 
-            />
+            <p className="text-muted-foreground">Available Lunar Crystals</p>
           </div>
         </Card>
 
-        {/* Category Filter */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          {categories.map(({ id, name, icon: Icon }) => (
-            <Button
-              key={id}
-              variant={activeCategory === id ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveCategory(id)}
-              className="flex-shrink-0"
-            >
-              <Icon className="w-4 h-4 mr-2" />
-              {name}
-            </Button>
-          ))}
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={filter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('all')}
+          >
+            All Rewards
+          </Button>
+          <Button
+            variant={filter === 'available' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('available')}
+          >
+            <Star className="w-4 h-4 mr-2" />
+            Available ({availableRewards.length})
+          </Button>
+          <Button
+            variant={filter === 'purchased' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setFilter('purchased')}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            My Rewards ({purchasedRewards.length})
+          </Button>
         </div>
 
-        {/* Available Rewards */}
-        {availableRewards.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-lg font-bold text-foreground mb-4">Available Rewards</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {availableRewards.map((reward) => (
-                <Card key={reward.id} className="card-interactive p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+        {/* Rewards Grid */}
+        <div className="space-y-4 mb-8">
+          {filteredRewards.length === 0 ? (
+            <Card className="card-elegant p-8 text-center">
+              <Gift className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground mb-4">
+                {filter === 'purchased' 
+                  ? "No rewards purchased yet" 
+                  : filter === 'available' 
+                    ? "All rewards have been purchased!" 
+                    : "No rewards available"
+                }
+              </p>
+              <Button variant="outline" onClick={() => setFilter('all')}>
+                View All Rewards
+              </Button>
+            </Card>
+          ) : (
+            filteredRewards.map((reward) => (
+              <Card key={reward.id} className="card-elegant p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4 flex-1">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      reward.purchased ? 'bg-green-500/20' : 'bg-primary/20'
+                    }`}>
+                      {reward.purchased ? (
+                        <CheckCircle className="w-6 h-6 text-green-500" />
+                      ) : (
                         <Gift className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{reward.name}</h3>
-                        <p className="text-sm text-muted-foreground">{reward.description}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {reward.category}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <LunarCrystalLogo size={18} />
-                      <span className="font-bold text-primary">{reward.cost}</span>
+                      )}
                     </div>
                     
-                    <Button
-                      onClick={() => handlePurchase(reward.id)}
-                      disabled={crystals < reward.cost}
-                      className={crystals >= reward.cost ? "gradient-primary text-white" : ""}
-                    >
-                      {crystals >= reward.cost ? (
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-foreground">{reward.name}</h3>
+                        {reward.purchased && (
+                          <Badge className="bg-green-500/20 text-green-700 border-green-500/30">
+                            Owned
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-2">{reward.description}</p>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <LunarCrystalLogo size={16} />
+                          <span className="text-sm font-medium text-primary">{reward.cost}</span>
+                        </div>
+                        
+                        <Badge variant="outline" className="text-xs">
+                          {reward.category}
+                        </Badge>
+                        
+                        {reward.purchased && reward.purchasedAt && (
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Calendar className="w-3 h-3" />
+                            <span>
+                              {new Date(reward.purchasedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    {!reward.purchased ? (
+                      <Button
+                        size="sm"
+                        onClick={() => handlePurchase(reward.id)}
+                        disabled={crystals < reward.cost}
+                        className="gradient-primary text-white"
+                      >
+                        {crystals < reward.cost ? 'Insufficient Crystals' : 'Purchase'}
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-green-600 border-green-600 hover:bg-green-50"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Mark as Used
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Purchase History */}
+        {purchaseHistory.length > 0 && (
+          <Card className="card-elegant p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">Recent Purchases</h2>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={resetPurchasedRewards}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Reset All
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              {purchaseHistory.slice(0, 5).map((purchase) => (
+                <div key={purchase.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
+                  <div>
+                    <p className="font-medium text-foreground">{purchase.rewardName}</p>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span>{new Date(purchase.purchasedAt).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <div className="flex items-center gap-1">
+                        <LunarCrystalLogo size={12} />
+                        <span>{purchase.cost}</span>
+                      </div>
+                      {purchase.isUsed && (
                         <>
-                          <ShoppingBag className="w-4 h-4 mr-2" />
-                          Purchase
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4 mr-2" />
-                          Need {reward.cost - crystals} more
+                          <span>•</span>
+                          <span className="text-green-600">Used</span>
                         </>
                       )}
-                    </Button>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Purchased Rewards */}
-        {purchasedRewards.length > 0 && (
-          <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Purchased Rewards</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {purchasedRewards.map((reward) => (
-                <Card key={reward.id} className="card-elegant p-4 opacity-75">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{reward.name}</h3>
-                        <p className="text-sm text-muted-foreground">{reward.description}</p>
-                      </div>
                     </div>
-                    <Badge className="bg-green-500/20 text-green-500 border-green-500/30">
-                      Owned
-                    </Badge>
                   </div>
                   
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <LunarCrystalLogo size={18} />
-                      <span className="font-bold text-muted-foreground line-through">{reward.cost}</span>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground">
-                      Purchased {reward.purchasedAt ? new Date(reward.purchasedAt).toLocaleDateString() : 'recently'}
-                    </p>
-                  </div>
-                </Card>
+                  {!purchase.isUsed && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleMarkAsUsed(purchase.id)}
+                    >
+                      Mark as Used
+                    </Button>
+                  )}
+                </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {filteredRewards.length === 0 && (
-          <Card className="card-elegant p-8 text-center">
-            <Gift className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No rewards available</h3>
-            <p className="text-muted-foreground">Check back later or adjust your category filter.</p>
           </Card>
         )}
       </div>

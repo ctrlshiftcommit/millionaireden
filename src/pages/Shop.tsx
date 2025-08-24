@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, ArrowRight, AlertTriangle, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ArrowRight, AlertTriangle, ShoppingCart, Zap } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useEXPSystem } from "@/hooks/useEXPSystem";
@@ -10,15 +10,24 @@ import { useLunarCrystals } from "@/hooks/useLunarCrystals";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 
 const Shop = () => {
-  const { totalEXP, getLevelInfo, removeEXP } = useEXPSystem();
-  const { crystals, settings, earnCrystals } = useLunarCrystals();
+  const { 
+    crystals, 
+    rewards, 
+    purchaseReward,
+    getLevelInfo,
+    resetPurchasedRewards,
+    earnCrystals
+  } = useLunarCrystals();
+  
+  const { totalEXP, removeEXP, getLevelInfo: getEXPLevelInfo } = useEXPSystem();
   const [expToConvert, setExpToConvert] = useState(100);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
   const currentLevel = getLevelInfo();
-  const crystalsToGain = Math.floor(expToConvert / settings.expToLunarCrystalRate);
+  const expToLunarCrystalRate = 100; // 100 EXP = 1 Crystal
+  const crystalsToGain = Math.floor(expToConvert / expToLunarCrystalRate);
   const newEXP = totalEXP - expToConvert;
-  const newLevel = getLevelInfo(newEXP);
+  const newLevel = getEXPLevelInfo(newEXP);
   const willLevelDown = newLevel.level < currentLevel.level;
 
   const handleConversion = () => {
@@ -37,6 +46,8 @@ const Shop = () => {
     { exp: 2500, crystals: 25, popular: false },
     { exp: 5000, crystals: 50, popular: false },
   ];
+
+  const levelInfo = getLevelInfo();
 
   return (
     <div className="min-h-screen bg-background pt-14 pb-20 safe-area-inset-top">
@@ -58,204 +69,137 @@ const Shop = () => {
           </div>
           <p className="text-muted-foreground text-lg">Convert your EXP into Lunar Crystals</p>
         </div>
+
+        {/* Current Stats */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="card-elegant p-3 text-center">
+            <div className="flex items-center justify-center gap-1 mb-2">
+              <LunarCrystalLogo size={18} />
+              <span className="text-lg font-bold text-primary">{crystals}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">Crystals</p>
+          </Card>
+          
+          <Card className="card-elegant p-3 text-center">
+            <div className="flex items-center justify-center gap-1 mb-2">
+              <Zap className="w-4 h-4 text-primary" />
+              <span className="text-lg font-bold text-primary">{totalEXP}</span>
+            </div>
+            <p className="text-xs text-muted-foreground">EXP</p>
+          </Card>
+          
+          <Card className="card-elegant p-3 text-center">
+            <p className="text-lg font-bold text-foreground">{levelInfo.level}</p>
+            <p className="text-xs text-muted-foreground">Level</p>
+          </Card>
+        </div>
       </div>
 
-      <div className="px-4 -mt-4">
-        {/* Current Status */}
+      <div className="px-4 -mt-2">
+        {/* EXP to Crystals Conversion */}
         <Card className="card-elegant p-6 mb-6">
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-foreground">{totalEXP.toLocaleString()}</p>
-              <p className="text-sm text-muted-foreground">Available EXP</p>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1">
-                <LunarCrystalLogo size={20} />
-                <span className="text-2xl font-bold text-primary">{crystals}</span>
-              </div>
-              <p className="text-sm text-muted-foreground">Lunar Crystals</p>
-            </div>
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Convert EXP to Crystals</h2>
           </div>
-
-          <div className="text-center">
-            <Badge className="bg-primary/20 text-primary border-primary/30">
-              {currentLevel.title} - Level {currentLevel.level}
-            </Badge>
-          </div>
-        </Card>
-
-        {/* Conversion Rate Info */}
-        <Card className="card-elegant p-4 mb-6 border-primary/20">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
-                <ArrowRight className="w-4 h-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">Exchange Rate</p>
-                <p className="text-sm text-muted-foreground">
-                  {settings.expToLunarCrystalRate} EXP = 1 Lunar Crystal
-                </p>
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Conversion Packages */}
-        <div className="space-y-4 mb-6">
-          <h2 className="text-lg font-semibold text-foreground">Quick Conversion Packages</h2>
           
-          <div className="grid grid-cols-1 gap-3">
-            {conversionPackages.map((pkg) => (
-              <Card 
-                key={pkg.exp} 
-                className={`card-interactive p-4 ${pkg.popular ? 'border-primary/50' : ''}`}
-                onClick={() => setExpToConvert(pkg.exp)}
-              >
+          <div className="bg-muted/50 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-foreground">Conversion Rate</span>
+              <span className="text-sm text-primary">100 EXP = 1 Crystal</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Available EXP: {totalEXP}</span>
+              <span className="text-sm text-muted-foreground">Max Crystals: {Math.floor(totalEXP / 100)}</span>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="grid grid-cols-3 gap-2">
+              {[100, 500, 1000].map((exp) => (
+                <Button
+                  key={exp}
+                  variant="outline"
+                  size="sm"
+                  disabled={totalEXP < exp}
+                  onClick={() => {
+                    if (removeEXP(exp, 'EXP to Crystal conversion')) {
+                      earnCrystals(Math.floor(exp / 100), 'EXP conversion');
+                    }
+                  }}
+                  className="flex flex-col gap-1 h-auto p-2"
+                >
+                  <span className="text-xs">{exp} EXP</span>
+                  <span className="text-xs font-bold text-primary">
+                    {Math.floor(exp / 100)} <LunarCrystalLogo size={12} className="inline" />
+                  </span>
+                </Button>
+              ))}
+            </div>
+          </div>
+          
+          {totalEXP < 100 && (
+            <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
+              <AlertTriangle className="w-4 h-4" />
+              <span>Complete more habits and tasks to earn EXP!</span>
+            </div>
+          )}
+        </Card>
+        
+        {/* Rewards Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-foreground">Available Rewards</h2>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={resetPurchasedRewards}
+            >
+              Reset Used
+            </Button>
+          </div>
+          
+          <div className="space-y-3">
+            {rewards.map((reward) => (
+              <Card key={reward.id} className="card-elegant p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-center">
-                      <p className="font-bold text-foreground">{pkg.exp}</p>
-                      <p className="text-xs text-muted-foreground">EXP</p>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      reward.purchased ? 'bg-green-500/20' : 'bg-primary/20'
+                    }`}>
+                      <span className="text-lg">{reward.purchased ? '✓' : '🎁'}</span>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                    <div className="flex items-center gap-1">
-                      <LunarCrystalLogo size={16} />
-                      <span className="font-bold text-primary">{pkg.crystals}</span>
+                    <div>
+                      <h3 className="font-medium text-foreground">{reward.name}</h3>
+                      <p className="text-sm text-muted-foreground">{reward.description}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <LunarCrystalLogo size={16} />
+                        <span className="text-sm font-medium text-primary">{reward.cost}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {reward.category}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {pkg.popular && (
-                      <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">
-                        Popular
-                      </Badge>
-                    )}
-                    <Button 
+                  {!reward.purchased ? (
+                    <Button
                       size="sm"
-                      disabled={totalEXP < pkg.exp}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setExpToConvert(pkg.exp);
-                        setShowConfirmation(true);
-                      }}
+                      onClick={() => purchaseReward(reward.id)}
+                      disabled={crystals < reward.cost}
+                      className="gradient-primary text-white"
                     >
-                      Convert
+                      {crystals < reward.cost ? 'Need More' : 'Buy'}
                     </Button>
-                  </div>
+                  ) : (
+                    <Badge className="bg-green-500/20 text-green-700 border-green-500/30">
+                      Owned
+                    </Badge>
+                  )}
                 </div>
               </Card>
             ))}
           </div>
         </div>
-
-        {/* Custom Conversion */}
-        <Card className="card-elegant p-6 mb-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Custom Conversion</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                EXP to Convert (max: {totalEXP.toLocaleString()})
-              </label>
-              <Input
-                type="number"
-                min="1"
-                max={totalEXP}
-                value={expToConvert}
-                onChange={(e) => setExpToConvert(Math.min(totalEXP, Math.max(1, parseInt(e.target.value) || 0)))}
-                className="text-center text-lg"
-              />
-            </div>
-
-            <div className="flex items-center justify-center">
-              <ArrowRight className="w-6 h-6 text-primary" />
-            </div>
-
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <LunarCrystalLogo size={24} />
-                <span className="text-2xl font-bold text-primary">{crystalsToGain}</span>
-              </div>
-              <p className="text-sm text-muted-foreground">Lunar Crystals</p>
-            </div>
-
-            {willLevelDown && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="w-5 h-5 text-destructive" />
-                  <p className="text-sm font-medium text-destructive">Level Down Warning</p>
-                </div>
-                <p className="text-sm text-destructive/80">
-                  This conversion will reduce your level from {currentLevel.level} ({currentLevel.title}) 
-                  to {newLevel.level} ({newLevel.title})
-                </p>
-              </div>
-            )}
-
-            <Button 
-              onClick={() => setShowConfirmation(true)}
-              disabled={expToConvert <= 0 || totalEXP < expToConvert}
-              className="w-full gradient-primary text-white"
-            >
-              Convert {expToConvert} EXP → {crystalsToGain} Crystals
-            </Button>
-          </div>
-        </Card>
-
-        {/* Confirmation Dialog */}
-        {showConfirmation && (
-          <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <Card className="card-elegant p-6 max-w-md w-full">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Confirm Conversion</h3>
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">EXP to spend:</span>
-                  <span className="font-medium text-foreground">{expToConvert}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Crystals to gain:</span>
-                  <div className="flex items-center gap-1">
-                    <LunarCrystalLogo size={16} />
-                    <span className="font-medium text-primary">{crystalsToGain}</span>
-                  </div>
-                </div>
-                {willLevelDown && (
-                  <div className="flex justify-between text-destructive">
-                    <span>Level change:</span>
-                    <span className="font-medium">
-                      {currentLevel.level} → {newLevel.level}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {willLevelDown && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-destructive">
-                    ⚠️ This action will reduce your level and cannot be undone.
-                  </p>
-                </div>
-              )}
-
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setShowConfirmation(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleConversion}
-                  className="flex-1 gradient-primary text-white"
-                >
-                  Confirm
-                </Button>
-              </div>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );

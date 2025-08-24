@@ -16,33 +16,41 @@ import LevelHistory from "./pages/LevelHistory";
 import Shop from "./pages/Shop";
 import NotFound from "./pages/NotFound";
 
+import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
+import { useEXPIntegration } from "@/hooks/useEXPIntegration";
+
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <div className="min-h-screen bg-background">
-          <Header />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/motivation" element={<Motivation />} />
-            <Route path="/journal" element={<Journal />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/rewards" element={<Rewards />} />
-            <Route path="/level-history" element={<LevelHistory />} />
-            <Route path="/shop" element={<Shop />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BottomNav />
-        </div>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+function App() {
+  useLunarCrystalIntegration();
+  useEXPIntegration();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="min-h-screen bg-background">
+            <Header />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/motivation" element={<Motivation />} />
+              <Route path="/journal" element={<Journal />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/rewards" element={<Rewards />} />
+              <Route path="/level-history" element={<LevelHistory />} />
+              <Route path="/shop" element={<Shop />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <BottomNav />
+          </div>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
