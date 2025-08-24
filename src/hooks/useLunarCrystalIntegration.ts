@@ -1,13 +1,8 @@
 import { useEffect } from 'react';
-import { useUnifiedStats } from './useUnifiedStats';
+import { useLunarCrystals } from './useLunarCrystals';
 
 export const useLunarCrystalIntegration = () => {
-  const { addLunarCrystals } = useUnifiedStats();
-  const settings = {
-    crystalsPerTask: 25,
-    crystalsPerHabit: 50,
-    crystalsPerStreak: 10,
-  };
+  const { earnCrystals, settings } = useLunarCrystals();
 
   useEffect(() => {
     // Listen for habit completion events
@@ -22,12 +17,12 @@ export const useLunarCrystalIntegration = () => {
         crystalsEarned += (streak - 1) * settings.crystalsPerStreak;
       }
       
-      addLunarCrystals(crystalsEarned, `Habit completed! ${streak > 1 ? `${streak}-day streak bonus!` : ''}`);
+      earnCrystals(crystalsEarned, `Habit completed! ${streak > 1 ? `${streak}-day streak bonus!` : ''}`);
     };
 
     // Listen for task completion events (can be added later)
     const handleTaskCompleted = (event: CustomEvent) => {
-      addLunarCrystals(settings.crystalsPerTask, 'Task completed!');
+      earnCrystals(settings.crystalsPerTask, 'Task completed!');
     };
 
     // Add event listeners
@@ -39,5 +34,5 @@ export const useLunarCrystalIntegration = () => {
       window.removeEventListener('habitCompleted', handleHabitCompleted as EventListener);
       window.removeEventListener('taskCompleted', handleTaskCompleted as EventListener);
     };
-  }, [addLunarCrystals]);
+  }, [earnCrystals, settings]);
 };

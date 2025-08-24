@@ -20,14 +20,14 @@ import ExportData from "./pages/ExportData";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
-import { useEXPIntegration } from "@/hooks/useEXPIntegration";
 import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
+import { useEXPIntegration } from "@/hooks/useEXPIntegration";
 
 const queryClient = new QueryClient();
 
 function App() {
-  useEXPIntegration();
   useLunarCrystalIntegration();
+  useEXPIntegration();
   
   return (
     <QueryClientProvider client={queryClient}>

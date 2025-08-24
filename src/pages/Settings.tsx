@@ -28,8 +28,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useResetStats } from '@/hooks/useResetStats';
 import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
 import { useToast } from '@/hooks/use-toast';
-import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
-import { Checkbox } from '@/components/ui/checkbox';
 
 const Settings = () => {
   const { 
@@ -40,7 +38,7 @@ const Settings = () => {
     updateReward, 
     deleteReward, 
     updateSettings,
-    getLevelInfo: getCrystalLevelInfo,
+    getLevelInfo,
     resetPurchasedRewards
   } = useLunarCrystals();
   
@@ -55,7 +53,6 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const { resetStats, isResetting } = useResetStats();
   const { toast } = useToast();
-  const { getLevelInfo } = useUnifiedStats();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [editingReward, setEditingReward] = useState<string | null>(null);
@@ -209,7 +206,6 @@ ${[
     }
   };
 
-  // Use EXP-based level for consistency across tabs
   const levelInfo = getLevelInfo();
 
   const handleSaveReward = () => {
@@ -263,12 +259,12 @@ ${[
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Progress to {levelInfo.level < 10 ? `Level ${levelInfo.level + 1}` : 'Max Level'}</span>
               <span className="text-primary font-medium">
-                {(levelInfo.pointsRequired)}-{levelInfo.nextLevelPoints} XP
+                {crystals} / {levelInfo.nextLevelPoints}
               </span>
             </div>
             <Progress 
-              value={Math.min(100, Math.max(0, (levelInfo.progress || 0) * 100))} 
-              className="h-2"
+              value={Math.min(100, ((crystals - levelInfo.pointsRequired) / (levelInfo.nextLevelPoints - levelInfo.pointsRequired)) * 100)} 
+              className="h-3" 
             />
           </div>
         </Card>
