@@ -14,38 +14,11 @@ const Shop = () => {
     crystals, 
     rewards, 
     purchaseReward,
-    getLevelInfo,
     resetPurchasedRewards,
     earnCrystals
   } = useLunarCrystals();
   
-  const { totalEXP, removeEXP, getLevelInfo: getEXPLevelInfo } = useEXPSystem();
-  const [expToConvert, setExpToConvert] = useState(100);
-  const [showConfirmation, setShowConfirmation] = useState(false);
-
-  const currentLevel = getLevelInfo();
-  const expToLunarCrystalRate = 100; // 100 EXP = 1 Crystal
-  const crystalsToGain = Math.floor(expToConvert / expToLunarCrystalRate);
-  const newEXP = totalEXP - expToConvert;
-  const newLevel = getEXPLevelInfo(newEXP);
-  const willLevelDown = newLevel.level < currentLevel.level;
-
-  const handleConversion = () => {
-    if (totalEXP >= expToConvert) {
-      removeEXP(expToConvert, 'EXP to Lunar Crystals conversion');
-      earnCrystals(crystalsToGain, `Converted ${expToConvert} EXP`);
-      setShowConfirmation(false);
-      setExpToConvert(100);
-    }
-  };
-
-  const conversionPackages = [
-    { exp: 100, crystals: 1, popular: false },
-    { exp: 500, crystals: 5, popular: false },
-    { exp: 1000, crystals: 10, popular: true },
-    { exp: 2500, crystals: 25, popular: false },
-    { exp: 5000, crystals: 50, popular: false },
-  ];
+  const { totalEXP, removeEXP, getLevelInfo } = useEXPSystem();
 
   const levelInfo = getLevelInfo();
 
