@@ -16,10 +16,16 @@ import {
   Edit, 
   Trash2, 
   Save,
-  Gem
+  Gem,
+  Download,
+  LogOut
 } from 'lucide-react';
 import { useLunarCrystals } from '@/hooks/useLunarCrystals';
+import { useEXPSystem } from '@/hooks/useEXPSystem';
+import { useHabits } from '@/hooks/useHabits';
+import { useAuth } from '@/hooks/useAuth';
 import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
+import { useToast } from '@/hooks/use-toast';
 
 const Settings = () => {
   const { 
@@ -33,6 +39,17 @@ const Settings = () => {
     getLevelInfo,
     resetPurchasedRewards
   } = useLunarCrystals();
+  
+  const { 
+    totalEXP, 
+    expTransactions,
+    levelHistory,
+    getLevelInfo: getEXPLevelInfo
+  } = useEXPSystem();
+  
+  const { habits, getHabitStats } = useHabits();
+  const { user, signOut } = useAuth();
+  const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState('profile');
   const [editingReward, setEditingReward] = useState<string | null>(null);
@@ -45,10 +62,146 @@ const Settings = () => {
   });
   const [showAddReward, setShowAddReward] = useState(false);
   const [userProfile, setUserProfile] = useState({
-    name: 'Millionaire Den User',
-    email: 'user@example.com',
-    avatar: '',
+    name: user?.user_metadata?.display_name || 'Millionaire Den User',
+    email: user?.email || 'user@example.com',
+    avatar: user?.user_metadata?.avatar_url || '',
   });
+
+  const handleExportData = () => {
+    try {
+      const expLevel = getEXPLevelInfo();
+      const habitStats = getHabitStats();
+      const currentDate = new Date().toISOString();
+      
+      // Level definitions
+      const levelDefinitions = [
+        { id: 1, name: "Peasant", req_exp: 1000, image: "assets/levels/1.png" },
+        { id: 2, name: "Servant", req_exp: 5000, image: "assets/levels/2.png" },
+        { id: 3, name: "Merchant", req_exp: 10000, image: "assets/levels/3.png" },
+        { id: 4, name: "Noble", req_exp: 20000, image: "assets/levels/4.png" },
+        { id: 5, name: "Baron", req_exp: 40000, image: "assets/levels/5.png" },
+        { id: 6, name: "Earl", req_exp: 80000, image: "assets/levels/6.png" },
+        { id: 7, name: "Duke", req_exp: 160000, image: "assets/levels/7.png" },
+        { id: 8, name: "Prince", req_exp: 320000, image: "assets/levels/8.png" },
+        { id: 9, name: "King", req_exp: 640000, image: "assets/levels/9.png" },
+        { id: 10, name: "Emperor", req_exp: 1000000, image: "assets/levels/10.png" }
+      ];
+
+      const exportData = `# APP_EXPORT v2
+exported_at: ${currentDate}
+
+## user
+name: ${userProfile.name}
+level: ${expLevel.level}
+exp_current: ${totalEXP}
+lunar_crystals: ${crystals}
+
+---
+
+## levels
+${levelDefinitions.map(level => `- id: ${level.id}
+  name: ${level.name}
+  req_exp: ${level.req_exp}
+  image: ${level.image}`).join('\n')}
+
+---
+
+## rewards
+${rewards.map(reward => `- id: ${reward.id}
+  name: ${reward.name}
+  price_crystals: ${reward.cost}
+  enabled: true`).join('\n')}
+
+---
+
+## reward_history
+# No reward purchase history available
+
+---
+
+## tasks
+${habits.map(habit => `- id: ${habit.id}
+  title: ${habit.name}
+  points_exp: 200
+  color: "${habit.color}"
+  schedule: ${habit.goal}
+  history:
+${habit.completedDates.map(date => `    - date: ${date}
+      status: done`).join('\n')}`).join('\n')}
+
+---
+
+## conversions_exp_to_crystals
+${expTransactions
+  .filter(tx => tx.type === 'conversion_loss')
+  .map(tx => `- ts: ${tx.timestamp}
+  exp_spent: ${Math.abs(tx.amount)}
+  crystals_gained: ${Math.floor(Math.abs(tx.amount) / 100)}`).join('\n')}
+
+---
+
+## analytics
+weekly_success_rate: ${habitStats.completionRate}%
+monthly_success_rate: ${habitStats.completionRate}%
+all_time_success_rate: ${habitStats.completionRate}%
+
+---
+
+## logs
+${[
+  ...expTransactions.map(tx => `- ts: ${tx.timestamp}
+  type: ${tx.type === 'task_completed' || tx.type === 'habit_completed' ? 'exp_gained' : 'exp_spent'}
+  ${tx.type === 'task_completed' || tx.type === 'habit_completed' ? 'exp_gained' : 'exp_spent'}: ${Math.abs(tx.amount)}
+  source: ${tx.source || 'Unknown'}
+  description: ${tx.description}`),
+  
+  ...levelHistory.map(lh => `- ts: ${lh.timestamp}
+  type: level_up
+  old_level: ${lh.oldLevel}
+  new_level: ${lh.newLevel}
+  exp_required: ${lh.expAtLevelUp}
+  exp_at_levelup: ${lh.expAtLevelUp}`)
+].slice(0, 20).join('\n\n')}`;
+
+      // Create and download the file
+      const blob = new Blob([exportData], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `millionaire_den_export_${new Date().toISOString().split('T')[0]}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export successful!",
+        description: "Your account data has been exported to a markdown file.",
+      });
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your data. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an error signing out. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const levelInfo = getLevelInfo();
 
@@ -118,8 +271,8 @@ const Settings = () => {
           <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
             <TabsTrigger value="rewards" className="text-xs">Rewards</TabsTrigger>
-            <TabsTrigger value="points" className="text-xs">Points</TabsTrigger>
-            <TabsTrigger value="notifications" className="text-xs">Alerts</TabsTrigger>
+            <TabsTrigger value="export" className="text-xs">Export</TabsTrigger>
+            <TabsTrigger value="account" className="text-xs">Account</TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
@@ -265,79 +418,85 @@ const Settings = () => {
             </Button>
           </TabsContent>
 
-          {/* Points Tab */}
-          <TabsContent value="points" className="space-y-4">
+          {/* Export Tab */}
+          <TabsContent value="export" className="space-y-4">
             <Card className="card-elegant p-4">
               <div className="flex items-center gap-2 mb-4">
-                <LunarCrystalLogo size={20} />
-                <h3 className="font-semibold text-foreground">Lunar Crystal Settings</h3>
+                <Download className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Export Account Data</h3>
               </div>
               
               <div className="space-y-4">
-                <div>
-                  <Label>Crystals per completed task</Label>
-                  <Input
-                    type="number"
-                    value={settings.crystalsPerTask}
-                    onChange={(e) => updateSettings({ crystalsPerTask: parseInt(e.target.value) || 0 })}
-                    className="mt-1"
-                  />
+                <p className="text-muted-foreground">
+                  Export all your account data including habits, rewards, transactions, and progress history in markdown format.
+                </p>
+                
+                <div className="bg-muted/50 p-4 rounded-lg border">
+                  <h4 className="font-medium mb-2">Export includes:</h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• User profile and current stats</li>
+                    <li>• Level definitions and progress</li>
+                    <li>• Custom rewards and purchase history</li>
+                    <li>• Habits and completion data</li>
+                    <li>• EXP transactions and conversions</li>
+                    <li>• Analytics and success rates</li>
+                    <li>• Complete activity logs</li>
+                  </ul>
                 </div>
                 
-                <div>
-                  <Label>Crystals per completed habit</Label>
-                  <Input
-                    type="number"
-                    value={settings.crystalsPerHabit}
-                    onChange={(e) => updateSettings({ crystalsPerHabit: parseInt(e.target.value) || 0 })}
-                    className="mt-1"
-                  />
-                </div>
-                
-                <div>
-                  <Label>Bonus crystals per streak day</Label>
-                  <Input
-                    type="number"
-                    value={settings.crystalsPerStreak}
-                    onChange={(e) => updateSettings({ crystalsPerStreak: parseInt(e.target.value) || 0 })}
-                    className="mt-1"
-                  />
-                </div>
+                <Button 
+                  onClick={handleExportData}
+                  className="w-full gradient-primary text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Account Data
+                </Button>
               </div>
             </Card>
           </TabsContent>
 
-          {/* Notifications Tab */}
-          <TabsContent value="notifications" className="space-y-4">
+          {/* Account Tab */}
+          <TabsContent value="account" className="space-y-4">
             <Card className="card-elegant p-4">
               <div className="flex items-center gap-2 mb-4">
-                <Bell className="w-5 h-5 text-primary" />
-                <h3 className="font-semibold text-foreground">Notification Settings</h3>
+                <User className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Account Management</h3>
               </div>
               
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">Daily Reminders</p>
-                    <p className="text-sm text-muted-foreground">Get reminded to complete your habits</p>
+                <div className="bg-muted/50 p-4 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-foreground">Signed in as</p>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
+                    </div>
+                    <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
                   </div>
-                  <Button variant="outline" size="sm">Enable</Button>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">Streak Alerts</p>
-                    <p className="text-sm text-muted-foreground">Celebrate your achievements</p>
-                  </div>
-                  <Button variant="outline" size="sm">Enable</Button>
+                <div className="space-y-3">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Bell className="w-4 h-4 mr-2" />
+                    Notification Preferences
+                  </Button>
+                  
+                  <Button variant="outline" className="w-full justify-start">
+                    <SettingsIcon className="w-4 h-4 mr-2" />
+                    Privacy Settings
+                  </Button>
                 </div>
                 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">Reward Notifications</p>
-                    <p className="text-sm text-muted-foreground">Know when you can buy rewards</p>
-                  </div>
-                  <Button variant="outline" size="sm">Enable</Button>
+                <div className="pt-4 border-t">
+                  <Button 
+                    onClick={handleSignOut}
+                    variant="destructive" 
+                    className="w-full"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
                 </div>
               </div>
             </Card>
