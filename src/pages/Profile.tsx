@@ -24,16 +24,21 @@ import { Link } from "react-router-dom";
 import { useHabits } from "@/hooks/useHabits";
 import { useProgressTracking } from "@/hooks/useProgressTracking";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useProfile } from "@/hooks/useProfile";
+import { useAchievements } from "@/hooks/useAchievements";
 
 const Profile = () => {
   const { habits, achievements, completeHabit, addHabit, deleteHabit, getHabitStats } = useHabits();
   const { progressStats, loading: progressLoading } = useProgressTracking();
   const { checkDailyProgress } = useNotifications();
+  const { profile, userExp, loading: profileLoading } = useProfile();
+  const { userAchievements, getAchievementProgress } = useAchievements();
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddHabit, setShowAddHabit] = useState(false);
   const [newHabit, setNewHabit] = useState({ name: "", description: "", color: "bg-blue-500", goal: "daily" as const });
 
   const stats = getHabitStats();
+  const achievementProgress = getAchievementProgress(stats);
 
   const handleAddHabit = async () => {
     if (!newHabit.name.trim()) return;
@@ -67,27 +72,39 @@ const Profile = () => {
         <Card className="card-elegant p-6 mb-6 animate-fadeInScale">
           <div className="flex items-center gap-4 mb-4">
             <Avatar className="w-16 h-16 animate-glowPulse">
-              <AvatarImage src="/placeholder-avatar.jpg" />
+              <AvatarImage src={profile?.avatar_url || ''} />
               <AvatarFallback className="bg-primary/20 text-primary font-semibold text-lg">
-                MD
+                {profile?.display_name?.[0] || profile?.email?.[0] || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-foreground">Millionaire Den User</h2>
-              <p className="text-muted-foreground">Level {stats.level} Achiever</p>
+              <h2 className="text-xl font-bold text-foreground">
+                {profile?.display_name || profile?.email?.split('@')[0] || 'User'}
+              </h2>
+              <p className="text-muted-foreground">
+                Level {userExp?.current_level || 0} • {userExp?.lunar_crystals || 0} Crystals
+              </p>
+              <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
-            <Button variant="outline" size="sm" className="hover-glow">
-              <Edit className="w-4 h-4" />
-            </Button>
+            <Link to="/profile-edit">
+              <Button variant="outline" size="sm" className="hover-glow">
+                <Edit className="w-4 h-4" />
+              </Button>
+            </Link>
           </div>
           
           {/* XP Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress to Level {stats.level + 1}</span>
-              <span className="text-primary font-medium">{stats.totalXP} / {(stats.level + 1) * 100} XP</span>
+              <span className="text-muted-foreground">Progress to Level {(userExp?.current_level || 0) + 1}</span>
+              <span className="text-primary font-medium">
+                {userExp?.total_exp || 0} / {((userExp?.current_level || 0) + 1) * 100} XP
+              </span>
             </div>
-            <Progress value={(stats.totalXP % 100)} className="h-3 animate-streakGlow" />
+            <Progress 
+              value={((userExp?.total_exp || 0) % 100)} 
+              className="h-3 animate-streakGlow" 
+            />
           </div>
         </Card>
 
@@ -121,7 +138,7 @@ const Profile = () => {
         <div className="grid grid-cols-3 gap-3">
           <Card className="card-elegant p-4 text-center hover-glow animate-slideInUp" style={{ animationDelay: '0.4s' }}>
             <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
-            <p className="text-lg font-bold text-foreground">{stats.level}</p>
+            <p className="text-lg font-bold text-foreground">{userExp?.current_level || 0}</p>
             <p className="text-xs text-muted-foreground">Level</p>
           </Card>
           
@@ -170,7 +187,7 @@ const Profile = () => {
                 : "text-muted-foreground hover:text-foreground hover-glow"
             }`}
           >
-            Achievements ({achievements.filter(a => a.unlocked).length})
+            Achievements ({userAchievements.length})
           </button>
         </div>
 
@@ -337,29 +354,42 @@ const Profile = () => {
           <div className="space-y-4 animate-slideInUp">
             <h2 className="text-lg font-semibold text-foreground">Achievements</h2>
 
-            {achievements.map((achievement, index) => (
+            {achievementProgress.map((item, index) => (
               <Card 
-                key={achievement.id} 
+                key={item.achievement.id} 
                 className={`card-elegant p-4 hover-glow animate-slideInUp ${
-                  achievement.unlocked ? "border-primary/50 animate-glowPulse" : ""
+                  item.isCompleted ? "border-primary/50 animate-glowPulse" : ""
                 }`}
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center smooth-curve ${
-                    achievement.unlocked 
+                    item.isCompleted 
                       ? "bg-primary/20 text-primary animate-glowPulse" 
                       : "bg-muted text-muted-foreground"
                   }`}>
                     <Trophy className="w-6 h-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{achievement.name}</h3>
-                    <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                    <h3 className="font-medium text-foreground">{item.achievement.name}</h3>
+                    <p className="text-sm text-muted-foreground">{item.achievement.description}</p>
+                    {!item.isCompleted && (
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">Progress</span>
+                          <span className="text-primary">{Math.round(item.progress * 100)}%</span>
+                        </div>
+                        <Progress value={item.progress * 100} className="h-2" />
+                      </div>
+                    )}
                   </div>
-                  {achievement.unlocked && (
+                  {item.isCompleted ? (
                     <Badge className="bg-primary/20 text-primary border-primary/30 animate-fadeInScale">
-                      Unlocked
+                      {item.achievement.crystal_reward} Crystals
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-muted-foreground">
+                      {item.achievement.crystal_reward} Crystals
                     </Badge>
                   )}
                 </div>

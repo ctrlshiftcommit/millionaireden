@@ -11,6 +11,7 @@ import Home from "./pages/Home";
 import Motivation from "./pages/Motivation";
 import Journal from "./pages/Journal";
 import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
 import Settings from "./pages/Settings";
 import Rewards from "./pages/Rewards";
 import LevelHistory from "./pages/LevelHistory";
@@ -44,6 +45,7 @@ function App() {
                     <Route path="/motivation" element={<Motivation />} />
                     <Route path="/journal" element={<Journal />} />
                     <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile-edit" element={<ProfileEdit />} />
                     <Route path="/settings" element={<Settings />} />
                     <Route path="/rewards" element={<Rewards />} />
                     <Route path="/level-history" element={<LevelHistory />} />

@@ -130,14 +130,16 @@ export const useAchievements = () => {
 
       if (achievementError) throw achievementError;
 
-      // Add crystals to user's balance
-      const { data: currentExp } = await supabase
+      // Add crystals to user's balance - fetch current amount first
+      const { data: currentExp, error: fetchError } = await supabase
         .from('user_experience')
         .select('lunar_crystals')
         .eq('user_id', user.id)
         .single();
 
-      if (currentExp) {
+      if (fetchError) {
+        console.error('Error fetching current crystals:', fetchError);
+      } else {
         const { error: crystalError } = await supabase
           .from('user_experience')
           .update({
