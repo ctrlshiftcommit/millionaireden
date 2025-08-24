@@ -7,9 +7,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Camera, Save, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
+import { useProfilePictures } from "@/hooks/useProfilePictures";
+import { ProfilePictureGallery } from "@/components/ProfilePictureGallery";
 
 const ProfileEdit = () => {
-  const { profile, loading, updateProfile, uploadAvatar } = useProfile();
+  const { profile, loading, updateProfile } = useProfile();
+  const { primaryPicture, uploading, uploadProfilePicture } = useProfilePictures();
   const [formData, setFormData] = useState({
     display_name: '',
     phone_number: ''
@@ -24,8 +27,8 @@ const ProfileEdit = () => {
       });
     }
   }, [profile]);
-  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showGallery, setShowGallery] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,30 +39,9 @@ const ProfileEdit = () => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file (JPEG, PNG, GIF, etc.)');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
-      return;
-    }
-
-    // Additional validation for common image types
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
-      return;
-    }
-
-    setUploading(true);
     try {
-      await uploadAvatar(file);
+      await uploadProfilePicture(file);
     } finally {
-      setUploading(false);
       // Reset the file input so the same file can be selected again
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -100,7 +82,7 @@ const ProfileEdit = () => {
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="w-24 h-24">
-                    <AvatarImage src={profile?.avatar_url || ''} />
+                    <AvatarImage src={primaryPicture?.public_url || profile?.avatar_url || ''} />
                     <AvatarFallback className="text-2xl">
                       {profile?.display_name?.[0] || profile?.email?.[0] || 'U'}
                     </AvatarFallback>
@@ -122,15 +104,26 @@ const ProfileEdit = () => {
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
-                <p className="text-sm text-muted-foreground">
-                  {uploading ? 'Uploading avatar...' : 'Click camera to change avatar'}
-                </p>
-                {uploading && (
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    Processing...
-                  </div>
-                )}
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    {uploading ? 'Uploading avatar...' : 'Click camera to change avatar'}
+                  </p>
+                  {uploading && (
+                    <div className="flex items-center gap-2 text-sm text-primary">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Processing...
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowGallery(true)}
+                    className="text-xs"
+                  >
+                    Manage Pictures
+                  </Button>
+                </div>
               </div>
 
               {/* Form Fields */}
@@ -182,6 +175,15 @@ const ProfileEdit = () => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Profile Picture Gallery Modal */}
+        {showGallery && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-background rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <ProfilePictureGallery onClose={() => setShowGallery(false)} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
