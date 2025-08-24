@@ -2,16 +2,19 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Quote, Shuffle, Heart, Search, Filter, Bookmark, Share } from "lucide-react";
+import { Quote, Shuffle, Heart, Search, Filter, Share } from "lucide-react";
 import { useState, useEffect } from "react";
-import { quotes, categories, getQuotesByCategory, getRandomQuote } from "@/data/quotes";
+import { useQuotes } from "@/hooks/useQuotes";
+import { useToast } from "@/hooks/use-toast";
 
 const Motivation = () => {
+  const { quotes, categories, getQuotesByCategory, shareQuote, loading } = useQuotes();
+  const { toast } = useToast();
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [currentQuote, setCurrentQuote] = useState(quotes[0]);
+  const [currentQuote, setCurrentQuote] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [favoriteQuotes, setFavoriteQuotes] = useState<number[]>([]);
-  const [filteredQuotes, setFilteredQuotes] = useState(quotes);
+  const [favoriteQuotes, setFavoriteQuotes] = useState<string[]>([]);
+  const [filteredQuotes, setFilteredQuotes] = useState([]);
 
   useEffect(() => {
     // Load favorites from localStorage
@@ -20,6 +23,25 @@ const Motivation = () => {
       setFavoriteQuotes(JSON.parse(saved));
     }
   }, []);
+
+  useEffect(() => {
+    if (quotes.length > 0 && !currentQuote) {
+      setCurrentQuote(quotes[0]);
+    }
+  }, [quotes, currentQuote]);
+
+  useEffect(() => {
+    // Listen for quote copied event
+    const handleQuoteCopied = () => {
+      toast({
+        title: "Quote Copied!",
+        description: "The quote has been copied to your clipboard.",
+      });
+    };
+
+    window.addEventListener('quote-copied', handleQuoteCopied);
+    return () => window.removeEventListener('quote-copied', handleQuoteCopied);
+  }, [toast]);
 
   useEffect(() => {
     // Filter quotes based on category and search
@@ -34,15 +56,17 @@ const Motivation = () => {
     }
     
     setFilteredQuotes(filtered);
-  }, [selectedCategory, searchTerm]);
+  }, [selectedCategory, searchTerm, getQuotesByCategory]);
 
   const getRandomQuoteFromCategory = () => {
     const categoryQuotes = getQuotesByCategory(selectedCategory);
-    const randomIndex = Math.floor(Math.random() * categoryQuotes.length);
-    setCurrentQuote(categoryQuotes[randomIndex]);
+    if (categoryQuotes.length > 0) {
+      const randomIndex = Math.floor(Math.random() * categoryQuotes.length);
+      setCurrentQuote(categoryQuotes[randomIndex]);
+    }
   };
 
-  const toggleFavorite = (quoteId: number) => {
+  const toggleFavorite = (quoteId: string) => {
     const newFavorites = favoriteQuotes.includes(quoteId)
       ? favoriteQuotes.filter(id => id !== quoteId)
       : [...favoriteQuotes, quoteId];
@@ -51,25 +75,27 @@ const Motivation = () => {
     localStorage.setItem('millionaire-den-favorites', JSON.stringify(newFavorites));
   };
 
-  const shareQuote = (quote: typeof quotes[0]) => {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Inspirational Quote',
-        text: `"${quote.text}" - ${quote.author}`,
-      });
-    } else {
-              const shareText = `"${quote.text}" - ${quote.author}`;
-              if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-                navigator.share({
-                  title: 'Inspirational Quote',
-                  text: shareText,
-                });
-              } else {
-                navigator.clipboard.writeText(shareText);
-                // Could show toast notification here
-              }
-    }
+  const handleShare = async (quote: any) => {
+    await shareQuote(quote);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!currentQuote) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">No quotes available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 pt-14 safe-area-inset-top">
@@ -106,7 +132,7 @@ const Motivation = () => {
             <div>
               <p className="text-sm text-muted-foreground">— {currentQuote.author}</p>
               <div className="flex gap-1 mt-2">
-                {currentQuote.tags.map((tag, index) => (
+                {currentQuote.tags?.map((tag, index) => (
                   <Badge key={index} variant="secondary" className="text-xs">
                     {tag}
                   </Badge>
@@ -137,7 +163,7 @@ const Motivation = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => shareQuote(currentQuote)}
+              onClick={() => handleShare(currentQuote)}
             >
               <Share className="w-4 h-4" />
             </Button>
@@ -215,7 +241,7 @@ const Motivation = () => {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => shareQuote(quote)}
+                      onClick={() => handleShare(quote)}
                       className="p-1 text-muted-foreground hover:text-foreground"
                     >
                       <Share className="w-4 h-4" />
@@ -229,7 +255,7 @@ const Motivation = () => {
                     <Badge variant="secondary" className="text-xs">
                       {quote.category}
                     </Badge>
-                    {quote.tags.slice(0, 2).map((tag, index) => (
+                    {quote.tags?.slice(0, 2).map((tag, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
                         {tag}
                       </Badge>

@@ -26,6 +26,7 @@ import { useProgressTracking } from "@/hooks/useProgressTracking";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfile } from "@/hooks/useProfile";
 import { useAchievements } from "@/hooks/useAchievements";
+import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 
 const Profile = () => {
   const { habits, achievements, completeHabit, addHabit, deleteHabit, getHabitStats } = useHabits();
@@ -33,6 +34,7 @@ const Profile = () => {
   const { checkDailyProgress } = useNotifications();
   const { profile, userExp, loading: profileLoading } = useProfile();
   const { userAchievements, getAchievementProgress } = useAchievements();
+  const { stats: unifiedStats } = useUnifiedStats();
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddHabit, setShowAddHabit] = useState(false);
   const [newHabit, setNewHabit] = useState({ name: "", description: "", color: "bg-blue-500", goal: "daily" as const });
@@ -82,7 +84,7 @@ const Profile = () => {
                 {profile?.display_name || profile?.email?.split('@')[0] || 'User'}
               </h2>
               <p className="text-muted-foreground">
-                Level {userExp?.current_level || 0} • {userExp?.lunar_crystals || 0} Crystals
+                Level {unifiedStats?.current_level || 0} • {unifiedStats?.lunar_crystals || 0} Crystals
               </p>
               <p className="text-xs text-muted-foreground">{profile?.email}</p>
             </div>
@@ -96,13 +98,13 @@ const Profile = () => {
           {/* XP Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress to Level {(userExp?.current_level || 0) + 1}</span>
+              <span className="text-muted-foreground">Progress to Level {(unifiedStats?.current_level || 0) + 1}</span>
               <span className="text-primary font-medium">
-                {userExp?.total_exp || 0} / {((userExp?.current_level || 0) + 1) * 100} XP
+                {unifiedStats?.total_exp || 0} / {((unifiedStats?.current_level || 0) + 1) * 100} XP
               </span>
             </div>
             <Progress 
-              value={((userExp?.total_exp || 0) % 100)} 
+              value={((unifiedStats?.total_exp || 0) % 100)} 
               className="h-3 animate-streakGlow" 
             />
           </div>
@@ -138,7 +140,7 @@ const Profile = () => {
         <div className="grid grid-cols-3 gap-3">
           <Card className="card-elegant p-4 text-center hover-glow animate-slideInUp" style={{ animationDelay: '0.4s' }}>
             <Trophy className="w-6 h-6 text-primary mx-auto mb-2" />
-            <p className="text-lg font-bold text-foreground">{userExp?.current_level || 0}</p>
+            <p className="text-lg font-bold text-foreground">{unifiedStats?.current_level || 0}</p>
             <p className="text-xs text-muted-foreground">Level</p>
           </Card>
           

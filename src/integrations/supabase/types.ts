@@ -313,6 +313,39 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          author: string
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean
+          tags: string[] | null
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          author: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tags?: string[] | null
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          tags?: string[] | null
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reward_purchases: {
         Row: {
           crystals_spent: number
@@ -350,6 +383,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      reward_templates: {
+        Row: {
+          category: string
+          cost: number
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          cost: number
+          created_at?: string
+          description: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          cost?: number
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       rewards: {
         Row: {

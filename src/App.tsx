@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Rewards from "./pages/Rewards";
 import LevelHistory from "./pages/LevelHistory";
 import Shop from "./pages/Shop";
+import ExportData from "./pages/ExportData";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -50,6 +51,7 @@ function App() {
                     <Route path="/rewards" element={<Rewards />} />
                     <Route path="/level-history" element={<LevelHistory />} />
                     <Route path="/shop" element={<Shop />} />
+                    <Route path="/export-data" element={<ExportData />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <BottomNav />
