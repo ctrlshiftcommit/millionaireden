@@ -28,9 +28,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useResetStats } from '@/hooks/useResetStats';
 import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
 import { useToast } from '@/hooks/use-toast';
+<<<<<<< HEAD
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogFooter, AlertDialogTitle, AlertDialogDescription, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useUnifiedStats } from '@/hooks/useUnifiedStats';
+=======
+>>>>>>> parent of 82b9486 (Add optional lunar crystal reset to user stats reset feature (#2))
 
 const Settings = () => {
   const { 
@@ -73,7 +76,6 @@ const Settings = () => {
     email: user?.email || 'user@example.com',
     avatar: user?.user_metadata?.avatar_url || '',
   });
-  const [resetCrystals, setResetCrystals] = useState(true);
 
   const handleExportData = () => {
     try {
@@ -498,55 +500,15 @@ ${[
                 </div>
                 
                 <div className="pt-4 border-t">
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        disabled={isResetting}
-                        variant="destructive" 
-                        className="w-full mb-3"
-                      >
-                        <RefreshCw className={`w-4 h-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
-                        {isResetting ? 'Resetting...' : 'Reset All Stats'}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Reset all stats?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action will permanently reset your progress, habits, EXP, levels, and history. Do you want to continue?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <div className="space-y-4 py-2">
-                        <div className="flex items-center justify-between p-3 rounded-md border">
-                          <div>
-                            <p className="font-medium text-foreground">Download your data</p>
-                            <p className="text-sm text-muted-foreground">Export a full backup before resetting.</p>
-                          </div>
-                          <Button onClick={handleExportData} variant="outline">
-                            <Download className="w-4 h-4 mr-2" />
-                            Export
-                          </Button>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Checkbox 
-                            id="reset-crystals"
-                            checked={resetCrystals}
-                            onCheckedChange={(v) => setResetCrystals(Boolean(v))}
-                          />
-                          <Label htmlFor="reset-crystals">Also reset Lunar Crystals to 0</Label>
-                        </div>
-                      </div>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          onClick={() => resetStats(resetCrystals)}
-                        >
-                          Reset Now
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                  <Button 
+                    onClick={resetStats}
+                    disabled={isResetting}
+                    variant="destructive" 
+                    className="w-full mb-3"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
+                    {isResetting ? 'Resetting...' : 'Reset All Stats'}
+                  </Button>
                   
                   <Button 
                     onClick={handleSignOut}

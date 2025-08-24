@@ -8,7 +8,7 @@ export const useResetStats = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const resetStats = async (resetCrystals: boolean = true) => {
+  const resetStats = async () => {
     if (!user) {
       toast({
         title: "Error",
@@ -21,8 +21,7 @@ export const useResetStats = () => {
     setIsResetting(true);
     try {
       const { error } = await supabase.rpc('reset_user_stats', {
-        p_user_id: user.id,
-        p_reset_crystals: resetCrystals
+        p_user_id: user.id
       });
 
       if (error) throw error;
