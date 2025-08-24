@@ -4,7 +4,6 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy, Target, Flame, Star, BookOpen, Plus, TrendingUp, Calendar, Zap, Settings } from "lucide-react";
 import { useHabits } from "@/hooks/useHabits";
 import { useLunarCrystals } from "@/hooks/useLunarCrystals";
-import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 import { Link } from "react-router-dom";
 
@@ -14,8 +13,7 @@ const Home = () => {
   const stats = getHabitStats();
   const levelInfo = getLevelInfo();
   
-  // Initialize lunar crystal integration
-  useLunarCrystalIntegration();
+
 
   return (
     <div className="min-h-screen bg-background pt-16 pb-20 safe-area-inset-top animate-slideInUp">
