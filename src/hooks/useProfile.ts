@@ -14,46 +14,51 @@ interface Profile {
   updated_at: string;
 }
 
+interface UserExperience {
+  total_exp: number;
+  current_level: number;
+  lunar_crystals: number;
+}
+
 export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [userExp, setUserExp] = useState<UserExperience | null>(null);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!user) {
-      setProfile(null);
+    if (user) {
+      fetchProfile();
+      fetchUserExperience();
+    } else {
       setLoading(false);
-      return;
     }
-
-    fetchProfile();
   }, [user]);
 
   const fetchProfile = async () => {
     if (!user) return;
 
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        return;
+      }
 
-      if (data) {
-        setProfile({
-          ...data,
-          email: user.email || null
-        });
-      } else {
+      if (!data) {
         // Create profile if it doesn't exist
         const newProfile = {
           user_id: user.id,
           display_name: user.user_metadata?.display_name || null,
-          email: user.email
+          email: user.email || null,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          phone_number: user.user_metadata?.phone_number || null
         };
 
         const { data: createdProfile, error: createError } = await supabase
@@ -62,52 +67,76 @@ export const useProfile = () => {
           .select()
           .single();
 
-        if (createError) throw createError;
-
-        setProfile({
-          ...createdProfile,
-          email: user.email || null
-        });
+        if (createError) {
+          console.error('Error creating profile:', createError);
+        } else {
+          setProfile(createdProfile);
+        }
+      } else {
+        setProfile(data);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile data.",
-        variant: "destructive"
-      });
+      console.error('Error in fetchProfile:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const updateProfile = async (updates: Partial<Pick<Profile, 'display_name' | 'phone_number' | 'avatar_url'>>) => {
-    if (!user || !profile) return false;
+  const fetchUserExperience = async () => {
+    if (!user) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
+        .from('user_experience')
+        .select('total_exp, current_level, lunar_crystals')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user experience:', error);
+        return;
+      }
+
+      if (data) {
+        setUserExp(data);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserExperience:', error);
+    }
+  };
+
+  const updateProfile = async (updates: Partial<Profile>) => {
+    if (!user || !profile) return;
+
+    try {
+      const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update profile. Please try again.",
+          variant: "destructive"
+        });
+        return;
+      }
 
-      setProfile(prev => prev ? { ...prev, ...updates } : prev);
-      
+      setProfile(data);
       toast({
         title: "Success",
-        description: "Profile updated successfully."
+        description: "Profile updated successfully!"
       });
-      
-      return true;
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile.",
+        description: "Failed to update profile. Please try again.",
         variant: "destructive"
       });
-      return false;
     }
   };
 
@@ -116,32 +145,28 @@ export const useProfile = () => {
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}.${fileExt}`;
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
       const filePath = `avatars/${fileName}`;
 
-      // Upload file to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        throw uploadError;
+      }
 
-      // Get public URL
       const { data } = supabase.storage
         .from('avatars')
         .getPublicUrl(filePath);
 
-      const avatarUrl = data.publicUrl;
-
-      // Update profile with new avatar URL
-      const success = await updateProfile({ avatar_url: avatarUrl });
-      
-      return success ? avatarUrl : null;
+      await updateProfile({ avatar_url: data.publicUrl });
+      return data.publicUrl;
     } catch (error) {
       console.error('Error uploading avatar:', error);
       toast({
         title: "Error",
-        description: "Failed to upload profile picture.",
+        description: "Failed to upload avatar. Please try again.",
         variant: "destructive"
       });
       return null;
@@ -150,9 +175,13 @@ export const useProfile = () => {
 
   return {
     profile,
+    userExp,
     loading,
     updateProfile,
     uploadAvatar,
-    refetch: fetchProfile
+    refetch: () => {
+      fetchProfile();
+      fetchUserExperience();
+    }
   };
 };
