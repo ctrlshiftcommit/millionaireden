@@ -18,21 +18,56 @@ const Home = () => {
   useLunarCrystalIntegration();
 
   return (
-    <div className="min-h-screen bg-background pt-14">
-      {/* Compact Stats Section */}
-      <div className="px-4 pt-4 pb-4">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-foreground">Millionaire Den</h1>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 text-primary">
-              <span className="text-sm font-medium">Level {levelInfo.level}</span>
+    <div className="min-h-screen bg-background pt-14 safe-area-inset-top">
+      {/* Compact Stats Strip */}
+      <div className="px-4 pt-2 pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-xl font-bold text-foreground">Millionaire Den</h1>
+        </div>
+        
+        {/* Compact Stats Strip */}
+        <div className="flex items-center justify-between bg-card/50 backdrop-blur-md rounded-lg p-3 mb-4 border border-border/30">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-bold text-primary">{levelInfo.level}</span>
             </div>
-            <div className="flex items-center gap-1">
-              <LunarCrystalLogo size={16} />
-              <span className="text-sm font-bold text-primary">{crystals}</span>
+            <div>
+              <p className="text-sm font-medium text-foreground">{levelInfo.title}</p>
+              <p className="text-xs text-muted-foreground">Level {levelInfo.level}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-center">
+              <div className="flex items-center gap-1 justify-center">
+                <LunarCrystalLogo size={14} />
+                <span className="text-sm font-bold text-primary">{crystals}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">Crystals</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-bold text-foreground">{stats.completedToday}/{stats.totalHabits}</p>
+              <p className="text-xs text-muted-foreground">Today</p>
             </div>
           </div>
         </div>
+
+        {/* Level Progress Bar */}
+        <Card className="card-elegant p-3 mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-muted-foreground">Progress to next level</span>
+            <span className="text-xs text-primary font-medium">
+              {crystals} / {levelInfo.nextLevelPoints}
+            </span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div 
+              className="bg-primary rounded-full h-2 transition-all duration-300"
+              style={{ 
+                width: `${Math.min(100, ((crystals - levelInfo.pointsRequired) / (levelInfo.nextLevelPoints - levelInfo.pointsRequired)) * 100)}%` 
+              }}
+            />
+          </div>
+        </Card>
 
         {/* Compact Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
@@ -152,6 +187,15 @@ const Home = () => {
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <BookOpen className="w-6 h-6 text-primary mb-2" />
                   <p className="text-sm font-medium text-foreground">New Journal</p>
+                </div>
+              </Card>
+            </Link>
+
+            <Link to="/level-history">
+              <Card className="card-interactive p-4 h-24">
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <Trophy className="w-6 h-6 text-primary mb-2" />
+                  <p className="text-sm font-medium text-foreground">Level History</p>
                 </div>
               </Card>
             </Link>

@@ -67,26 +67,41 @@ const defaultRewards: Reward[] = [
 ];
 
 const levelTitles = [
-  { level: 1, title: 'Peasant', pointsRequired: 0 },
-  { level: 2, title: 'Apprentice', pointsRequired: 100 },
-  { level: 3, title: 'Squire', pointsRequired: 300 },
-  { level: 4, title: 'Warrior', pointsRequired: 700 },
-  { level: 5, title: 'Knight', pointsRequired: 1500 },
-  { level: 6, title: 'Champion', pointsRequired: 3000 },
-  { level: 7, title: 'Hero', pointsRequired: 6000 },
-  { level: 8, title: 'Legend', pointsRequired: 12000 },
-  { level: 9, title: 'Master', pointsRequired: 25000 },
-  { level: 10, title: 'Grandmaster', pointsRequired: 50000 },
+  { level: 1, title: 'Peasant', pointsRequired: 1000, description: 'Just a commoner, struggling to survive.' },
+  { level: 2, title: 'Servant', pointsRequired: 5000, description: 'Doing others\' bidding, but learning discipline.' },
+  { level: 3, title: 'Recruit', pointsRequired: 12000, description: 'A fresh fighter with basic combat knowledge.' },
+  { level: 4, title: 'Soldier', pointsRequired: 20000, description: 'Trained and battle-ready, part of a greater force.' },
+  { level: 5, title: 'Mercenary', pointsRequired: 30000, description: 'A seasoned warrior fighting for coin and glory.' },
+  { level: 6, title: 'Knight', pointsRequired: 42000, description: 'Honorable, skilled, and a recognized fighter.' },
+  { level: 7, title: 'Slayer', pointsRequired: 55000, description: 'Feared in battle, taking down foes with ruthless efficiency.' },
+  { level: 8, title: 'Warlord', pointsRequired: 69000, description: 'Commands warriors, leads conquests, and inspires fear.' },
+  { level: 9, title: 'Champion', pointsRequired: 84000, description: 'A master combatant, known far and wide.' },
+  { level: 10, title: 'Elite Warrior', pointsRequired: 100000, description: 'The absolute peak, an unstoppable force in battle.' },
 ];
 
 export const useLunarCrystals = () => {
   const [crystals, setCrystals] = useState(250); // Starting crystals
+  const [totalEXP, setTotalEXP] = useState(0); // Total EXP earned
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [settings, setSettings] = useState({
     crystalsPerTask: 25,
     crystalsPerHabit: 50,
     crystalsPerStreak: 10, // bonus per streak day
+    expToLunarCrystalRate: 100, // 100 EXP = 1 Crystal
   });
+  const [levelHistory, setLevelHistory] = useState<Array<{
+    timestamp: string;
+    oldLevel: number;
+    newLevel: number;
+    expAtLevelUp: number;
+  }>>([]);
+  const [transactionHistory, setTransactionHistory] = useState<Array<{
+    timestamp: string;
+    type: 'reward_used' | 'exp_to_crystals' | 'task_completed' | 'level_up';
+    amount: number;
+    description: string;
+    expAmount?: number;
+  }>>([]);
 
   useEffect(() => {
     // Load from localStorage

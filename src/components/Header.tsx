@@ -22,14 +22,15 @@ export const Header = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-b border-border safe-area-inset-top">
         <div className="flex items-center justify-between px-4 h-14">
           {/* Menu Button */}
           <Button
             variant="ghost" 
             size="sm"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="hover:bg-primary/10"
+            className="hover:bg-primary/10 min-w-[44px] min-h-[44px] flex sm:flex"
+            aria-label="Menu"
           >
             <Menu className="w-5 h-5" />
           </Button>

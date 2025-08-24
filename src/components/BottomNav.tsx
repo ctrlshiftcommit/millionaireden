@@ -11,8 +11,8 @@ const navItems = [
 
 export const BottomNav = () => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-lg border-t border-border">
-      <div className="grid grid-cols-5 h-16">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-lg border-t border-border safe-area-inset-bottom">
+      <div className="grid grid-cols-5 h-16 safe-area-inset-bottom">
         {navItems.map(({ icon: Icon, label, to }) => (
           <NavLink
             key={to}

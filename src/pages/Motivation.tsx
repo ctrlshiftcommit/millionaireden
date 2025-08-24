@@ -58,14 +58,23 @@ const Motivation = () => {
         text: `"${quote.text}" - ${quote.author}`,
       });
     } else {
-      navigator.clipboard.writeText(`"${quote.text}" - ${quote.author}`);
+              const shareText = `"${quote.text}" - ${quote.author}`;
+              if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+                navigator.share({
+                  title: 'Inspirational Quote',
+                  text: shareText,
+                });
+              } else {
+                navigator.clipboard.writeText(shareText);
+                // Could show toast notification here
+              }
     }
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-20 pt-14 safe-area-inset-top">
       {/* Header */}
-      <div className="gradient-hero px-4 pt-8 pb-6">
+      <div className="gradient-hero px-4 pt-4 pb-6">
         <div className="text-center mb-6">
           <div className="inline-flex items-center gap-2 mb-3">
             <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center glow-effect">

@@ -39,7 +39,7 @@ const Profile = () => {
   const colors = ["bg-green-500", "bg-blue-500", "bg-purple-500", "bg-orange-500", "bg-pink-500", "bg-yellow-500"];
 
   return (
-    <div className="min-h-screen bg-background pb-20 pt-16">
+    <div className="min-h-screen bg-background pb-20 pt-14 safe-area-inset-top">
       {/* Header */}
       <div className="px-4 pt-4 pb-6">
         <div className="flex items-center justify-between mb-6">
