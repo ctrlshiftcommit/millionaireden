@@ -6,10 +6,12 @@ import { useHabits } from "@/hooks/useHabits";
 import { useLunarCrystals } from "@/hooks/useLunarCrystals";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
 import { Link } from "react-router-dom";
+import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 
 const Home = () => {
   const { habits, completeHabit, getHabitStats } = useHabits();
-  const { crystals, getLevelInfo } = useLunarCrystals();
+  const { crystals } = useLunarCrystals();
+  const { stats: unifiedStats, getLevelInfo } = useUnifiedStats();
   const stats = getHabitStats();
   const levelInfo = getLevelInfo();
   
@@ -54,14 +56,14 @@ const Home = () => {
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-muted-foreground">Progress to next level</span>
             <span className="text-xs text-primary font-medium">
-              {crystals} / {levelInfo.nextLevelPoints}
+              {(unifiedStats?.total_exp || 0)} / {levelInfo.nextLevelPoints} XP
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
             <div 
               className="bg-primary rounded-full h-2 transition-all duration-500 animate-streakGlow"
               style={{ 
-                width: `${Math.min(100, ((crystals - levelInfo.pointsRequired) / (levelInfo.nextLevelPoints - levelInfo.pointsRequired)) * 100)}%` 
+                width: `${Math.min(100, (levelInfo.progress || 0) * 100)}%` 
               }}
             />
           </div>
