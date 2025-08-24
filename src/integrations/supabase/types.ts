@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string
+          crystal_reward: number
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          requirement_type: string
+          requirement_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          crystal_reward?: number
+          description: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          requirement_type: string
+          requirement_value: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          crystal_reward?: number
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          requirement_type?: string
+          requirement_value?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       exp_transactions: {
         Row: {
           amount: number
@@ -248,6 +287,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          phone_number: string | null
           updated_at: string
           user_id: string
         }
@@ -257,6 +297,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          phone_number?: string | null
           updated_at?: string
           user_id: string
         }
@@ -266,6 +307,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          phone_number?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -428,6 +470,38 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          crystals_earned: number
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          crystals_earned?: number
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          crystals_earned?: number
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_experience: {
         Row: {
