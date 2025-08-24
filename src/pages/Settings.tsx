@@ -18,12 +18,14 @@ import {
   Save,
   Gem,
   Download,
-  LogOut
+  LogOut,
+  RefreshCw
 } from 'lucide-react';
 import { useLunarCrystals } from '@/hooks/useLunarCrystals';
 import { useEXPSystem } from '@/hooks/useEXPSystem';
 import { useHabits } from '@/hooks/useHabits';
 import { useAuth } from '@/hooks/useAuth';
+import { useResetStats } from '@/hooks/useResetStats';
 import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
 import { useToast } from '@/hooks/use-toast';
 
@@ -49,6 +51,7 @@ const Settings = () => {
   
   const { habits, getHabitStats } = useHabits();
   const { user, signOut } = useAuth();
+  const { resetStats, isResetting } = useResetStats();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState('profile');
@@ -490,8 +493,18 @@ ${[
                 
                 <div className="pt-4 border-t">
                   <Button 
-                    onClick={handleSignOut}
+                    onClick={resetStats}
+                    disabled={isResetting}
                     variant="destructive" 
+                    className="w-full mb-3"
+                  >
+                    <RefreshCw className={`w-4 h-4 mr-2 ${isResetting ? 'animate-spin' : ''}`} />
+                    {isResetting ? 'Resetting...' : 'Reset All Stats'}
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleSignOut}
+                    variant="outline" 
                     className="w-full"
                   >
                     <LogOut className="w-4 h-4 mr-2" />

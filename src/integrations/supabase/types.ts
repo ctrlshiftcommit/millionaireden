@@ -498,6 +498,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      reset_user_stats: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

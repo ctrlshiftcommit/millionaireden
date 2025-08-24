@@ -6,20 +6,15 @@ import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { LunarCrystalLogo } from './LunarCrystalLogo';
 import { useLunarCrystals } from '@/hooks/useLunarCrystals';
+import { useNotifications } from '@/hooks/useNotifications';
+import { NotificationPanel } from './NotificationPanel';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const { crystals, getLevelInfo } = useLunarCrystals();
+  const { unreadCount } = useNotifications();
   const levelInfo = getLevelInfo();
-
-  const notifications = [
-    { id: 1, message: "Don't forget to complete your morning workout!", time: "2 hours ago", read: false },
-    { id: 2, message: "Great job! You're on a 7-day streak!", time: "1 day ago", read: true },
-    { id: 3, message: "New achievement unlocked: Week Warrior", time: "1 day ago", read: false },
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
     <>
@@ -59,35 +54,10 @@ export const Header = () => {
             </Button>
 
             {/* Notifications Dropdown */}
-            {showNotifications && (
-              <Card className="absolute right-0 top-12 w-80 max-w-[90vw] card-elegant p-4 z-50">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-foreground">Notifications</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowNotifications(false)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-3 rounded-lg border ${
-                        notification.read 
-                          ? 'bg-muted/30 border-border/30' 
-                          : 'bg-primary/5 border-primary/20'
-                      }`}
-                    >
-                      <p className="text-sm text-foreground">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+            <NotificationPanel 
+              isOpen={showNotifications} 
+              onClose={() => setShowNotifications(false)} 
+            />
           </div>
         </div>
       </header>
