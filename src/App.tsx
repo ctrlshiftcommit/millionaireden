@@ -21,11 +21,13 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 import { useEXPIntegration } from "@/hooks/useEXPIntegration";
+import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
 
 const queryClient = new QueryClient();
 
 function App() {
   useEXPIntegration();
+  useLunarCrystalIntegration();
   
   return (
     <QueryClientProvider client={queryClient}>

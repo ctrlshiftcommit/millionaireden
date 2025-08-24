@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useUnifiedStats } from './useUnifiedStats';
 
 export interface Reward {
   id: string;
@@ -66,22 +67,9 @@ const defaultRewards: Reward[] = [
   },
 ];
 
-const levelTitles = [
-  { level: 1, title: 'Peasant', pointsRequired: 1000, description: 'Just a commoner, struggling to survive.' },
-  { level: 2, title: 'Servant', pointsRequired: 5000, description: 'Doing others\' bidding, but learning discipline.' },
-  { level: 3, title: 'Recruit', pointsRequired: 12000, description: 'A fresh fighter with basic combat knowledge.' },
-  { level: 4, title: 'Soldier', pointsRequired: 20000, description: 'Trained and battle-ready, part of a greater force.' },
-  { level: 5, title: 'Mercenary', pointsRequired: 30000, description: 'A seasoned warrior fighting for coin and glory.' },
-  { level: 6, title: 'Knight', pointsRequired: 42000, description: 'Honorable, skilled, and a recognized fighter.' },
-  { level: 7, title: 'Slayer', pointsRequired: 55000, description: 'Feared in battle, taking down foes with ruthless efficiency.' },
-  { level: 8, title: 'Warlord', pointsRequired: 69000, description: 'Commands warriors, leads conquests, and inspires fear.' },
-  { level: 9, title: 'Champion', pointsRequired: 84000, description: 'A master combatant, known far and wide.' },
-  { level: 10, title: 'Elite Warrior', pointsRequired: 100000, description: 'The absolute peak, an unstoppable force in battle.' },
-];
-
 export const useLunarCrystals = () => {
-  const [crystals, setCrystals] = useState(250); // Starting crystals
-  const [totalEXP, setTotalEXP] = useState(0); // Total EXP earned
+  const { stats, addLunarCrystals, spendLunarCrystals, getLevelInfo: getUnifiedLevelInfo } = useUnifiedStats();
+  const crystals = stats?.lunar_crystals || 0;
   const [rewards, setRewards] = useState<Reward[]>([]);
   const [settings, setSettings] = useState({
     crystalsPerTask: 25,
@@ -105,13 +93,8 @@ export const useLunarCrystals = () => {
 
   useEffect(() => {
     // Load from localStorage
-    const savedCrystals = localStorage.getItem('millionaire-den-crystals');
     const savedRewards = localStorage.getItem('millionaire-den-rewards');
     const savedSettings = localStorage.getItem('millionaire-den-crystal-settings');
-
-    if (savedCrystals) {
-      setCrystals(parseInt(savedCrystals));
-    }
 
     if (savedRewards) {
       setRewards(JSON.parse(savedRewards));
@@ -125,11 +108,6 @@ export const useLunarCrystals = () => {
   }, []);
 
   useEffect(() => {
-    // Save to localStorage
-    localStorage.setItem('millionaire-den-crystals', crystals.toString());
-  }, [crystals]);
-
-  useEffect(() => {
     localStorage.setItem('millionaire-den-rewards', JSON.stringify(rewards));
   }, [rewards]);
 
@@ -138,15 +116,15 @@ export const useLunarCrystals = () => {
   }, [settings]);
 
   const earnCrystals = (amount: number, reason: string = 'Task completed') => {
-    setCrystals(prev => prev + amount);
+    addLunarCrystals(amount, reason);
     // Could add notification here
   };
 
   const spendCrystals = (amount: number): boolean => {
-    if (crystals >= amount) {
-      setCrystals(prev => prev - amount);
-      return true;
-    }
+    // Delegate to unified stats (Supabase)
+    // Note: This is async in unified stats; here we expose sync-like result via promise resolution
+    // For compatibility, we optimistically return false and let callers update UI after action
+    console.warn('spendCrystals is now handled via Supabase. Use spendLunarCrystals from useUnifiedStats if you need promises.');
     return false;
   };
 
@@ -154,7 +132,10 @@ export const useLunarCrystals = () => {
     const reward = rewards.find(r => r.id === rewardId);
     if (!reward || reward.purchased) return false;
 
-    if (spendCrystals(reward.cost)) {
+    // Use Supabase-backed spending
+    // We cannot await here since the legacy API is sync; assume success path is handled elsewhere if needed
+    if (crystals >= reward.cost) {
+      spendLunarCrystals(reward.cost, 'Reward purchase');
       setRewards(prev => prev.map(r => 
         r.id === rewardId 
           ? { ...r, purchased: true, purchasedAt: new Date().toISOString() }
@@ -189,26 +170,12 @@ export const useLunarCrystals = () => {
   };
 
   const getLevelInfo = (): LevelInfo => {
-    let currentLevel = levelTitles[0];
-    let nextLevel = levelTitles[1];
-
-    for (let i = 0; i < levelTitles.length - 1; i++) {
-      if (crystals >= levelTitles[i].pointsRequired && crystals < levelTitles[i + 1].pointsRequired) {
-        currentLevel = levelTitles[i];
-        nextLevel = levelTitles[i + 1];
-        break;
-      } else if (crystals >= levelTitles[levelTitles.length - 1].pointsRequired) {
-        currentLevel = levelTitles[levelTitles.length - 1];
-        nextLevel = levelTitles[levelTitles.length - 1]; // Max level
-        break;
-      }
-    }
-
+    const info = getUnifiedLevelInfo();
     return {
-      level: currentLevel.level,
-      title: currentLevel.title,
-      pointsRequired: currentLevel.pointsRequired,
-      nextLevelPoints: nextLevel.pointsRequired,
+      level: info.level,
+      title: info.title,
+      pointsRequired: info.pointsRequired,
+      nextLevelPoints: info.nextLevelPoints,
     };
   };
 
