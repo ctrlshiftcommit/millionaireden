@@ -1,25 +1,18 @@
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { useAuth } from './useAuth';
 
 export const useResetStats = () => {
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const [isResetting, setIsResetting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const resetStats = async (resetCrystals: boolean = false) => {
-    if (!user) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to reset stats.",
-        variant: "destructive"
-      });
-      return false;
-    }
+    if (!user) return false;
 
-    setLoading(true);
+    setIsResetting(true);
     try {
       const { error } = await supabase.rpc('reset_user_stats', {
         p_user_id: user.id,
@@ -32,9 +25,10 @@ export const useResetStats = () => {
         title: "Success",
         description: "Your stats have been reset successfully.",
       });
-      
-      // Refresh the page to update all components
+
+      // Trigger a page reload to refresh all data
       window.location.reload();
+      
       return true;
     } catch (error) {
       console.error('Error resetting stats:', error);
@@ -45,12 +39,12 @@ export const useResetStats = () => {
       });
       return false;
     } finally {
-      setLoading(false);
+      setIsResetting(false);
     }
   };
 
   return {
     resetStats,
-    loading
+    isResetting
   };
 };

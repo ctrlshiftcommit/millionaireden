@@ -1,14 +1,17 @@
+
 import { useState } from 'react';
 import { Menu, Bell, Settings, X, User, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
 import { LunarCrystalLogo } from './LunarCrystalLogo';
 import { useLunarCrystals } from '@/hooks/useLunarCrystals';
 import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationPanel } from './NotificationPanel';
 import { useUnifiedStats } from '@/hooks/useUnifiedStats';
+import { useProfile } from '@/hooks/useProfile';
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -16,6 +19,7 @@ export const Header = () => {
   const { crystals } = useLunarCrystals();
   const { getLevelInfo } = useUnifiedStats();
   const { unreadCount } = useNotifications();
+  const { profile } = useProfile();
   const levelInfo = getLevelInfo();
 
   return (
@@ -39,27 +43,38 @@ export const Header = () => {
             <span className="text-sm font-bold text-primary">{crystals}</span>
           </div>
 
-          {/* Notifications */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="hover:bg-primary/10 relative"
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-primary text-xs">
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
+          {/* Profile Avatar & Notifications */}
+          <div className="flex items-center gap-2">
+            <Link to="/profile">
+              <Avatar className="w-8 h-8 hover:ring-2 hover:ring-primary/20 transition-all">
+                <AvatarImage src={profile?.avatar_url || ''} />
+                <AvatarFallback className="text-xs bg-primary/10">
+                  {profile?.display_name?.[0] || profile?.email?.[0] || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+            
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="hover:bg-primary/10 relative"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center bg-primary text-xs">
+                    {unreadCount}
+                  </Badge>
+                )}
+              </Button>
 
-            {/* Notifications Dropdown */}
-            <NotificationPanel 
-              isOpen={showNotifications} 
-              onClose={() => setShowNotifications(false)} 
-            />
+              {/* Notifications Dropdown */}
+              <NotificationPanel 
+                isOpen={showNotifications} 
+                onClose={() => setShowNotifications(false)} 
+              />
+            </div>
           </div>
         </div>
       </header>
@@ -79,14 +94,19 @@ export const Header = () => {
               </Button>
             </div>
 
-            {/* User Level Info */}
+            {/* User Profile Summary */}
             <div className="glass-effect p-4 rounded-lg mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                  <span className="text-lg font-bold text-primary">{levelInfo.level}</span>
-                </div>
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={profile?.avatar_url || ''} />
+                  <AvatarFallback className="bg-primary/20 text-primary font-semibold">
+                    {profile?.display_name?.[0] || profile?.email?.[0] || 'U'}
+                  </AvatarFallback>
+                </Avatar>
                 <div>
-                  <h3 className="font-bold text-foreground">{levelInfo.title}</h3>
+                  <h3 className="font-bold text-foreground">
+                    {profile?.display_name || profile?.email?.split('@')[0] || 'User'}
+                  </h3>
                   <p className="text-sm text-muted-foreground">Level {levelInfo.level}</p>
                 </div>
               </div>
@@ -94,7 +114,7 @@ export const Header = () => {
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Progress to next level</span>
                   <span className="text-primary font-medium">
-                    {(levelInfo.pointsRequired)}-{levelInfo.nextLevelPoints} XP
+                    {levelInfo.pointsRequired}-{levelInfo.nextLevelPoints} EXP
                   </span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">

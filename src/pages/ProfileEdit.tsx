@@ -1,10 +1,11 @@
+
 import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Camera, Save, ArrowLeft } from "lucide-react";
+import { Camera, Save, ArrowLeft, Upload } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 
@@ -12,31 +13,39 @@ const ProfileEdit = () => {
   const { profile, loading, updateProfile, uploadAvatar } = useProfile();
   const [formData, setFormData] = useState({
     display_name: profile?.display_name || '',
+    email: profile?.email || '',
     phone_number: profile?.phone_number || ''
   });
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update form when profile loads
+  useState(() => {
+    if (profile) {
+      setFormData({
+        display_name: profile.display_name || '',
+        email: profile.email || '',
+        phone_number: profile.phone_number || ''
+      });
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await updateProfile(formData);
+    setSaving(true);
+    
+    const success = await updateProfile(formData);
+    if (success) {
+      // Profile updated successfully
+    }
+    
+    setSaving(false);
   };
 
   const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please select an image file');
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
-      return;
-    }
 
     setUploading(true);
     await uploadAvatar(file);
@@ -75,9 +84,9 @@ const ProfileEdit = () => {
               {/* Avatar Upload */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
-                  <Avatar className="w-24 h-24">
+                  <Avatar className="w-24 h-24 ring-2 ring-primary/20">
                     <AvatarImage src={profile?.avatar_url || ''} />
-                    <AvatarFallback className="text-2xl">
+                    <AvatarFallback className="text-2xl bg-primary/10">
                       {profile?.display_name?.[0] || profile?.email?.[0] || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -88,7 +97,11 @@ const ProfileEdit = () => {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
                   >
-                    <Camera className="w-4 h-4" />
+                    {uploading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b border-white" />
+                    ) : (
+                      <Camera className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
                 <input
@@ -98,25 +111,15 @@ const ProfileEdit = () => {
                   onChange={handleAvatarChange}
                   className="hidden"
                 />
-                <p className="text-sm text-muted-foreground">
-                  {uploading ? 'Uploading...' : 'Click camera to change avatar'}
+                <p className="text-sm text-muted-foreground text-center">
+                  {uploading ? 'Uploading...' : 'Click camera icon to change avatar'}
+                  <br />
+                  <span className="text-xs">Max 5MB • JPG, PNG, GIF</span>
                 </p>
               </div>
 
               {/* Form Fields */}
               <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile?.email || ''}
-                    disabled
-                    className="bg-muted"
-                  />
-                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="display_name">Display Name</Label>
                   <Input
@@ -128,6 +131,23 @@ const ProfileEdit = () => {
                     }))}
                     placeholder="Enter your display name"
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({
+                      ...prev,
+                      email: e.target.value
+                    }))}
+                    placeholder="Enter your email"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Changing email requires verification
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -145,9 +165,22 @@ const ProfileEdit = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full gradient-primary">
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
+              <Button 
+                type="submit" 
+                className="w-full gradient-primary"
+                disabled={saving || uploading}
+              >
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b border-white mr-2" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </form>
           </CardContent>

@@ -2,10 +2,14 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { 
   User, 
   Edit,
-  Settings
+  Settings,
+  Crown,
+  Zap,
+  Gem
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
@@ -54,8 +58,16 @@ const Profile = () => {
     level: levelInfo.level || 0,
     totalExp: unifiedStats?.total_exp || 0,
     lunarCrystals: unifiedStats?.lunar_crystals || 0,
-    diamonds: unifiedStats?.diamonds || 0
+    diamonds: 0 // Will be updated when available
   };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20 pt-16 safe-area-inset-top">
@@ -84,19 +96,25 @@ const Profile = () => {
                 {profile?.display_name || profile?.email?.split('@')[0] || 'User'}
               </h2>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-lg text-primary font-semibold">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Crown className="w-3 h-3" />
                   Level {levelInfo.level || 0}
-                </span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-blue-400 font-medium">
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1 text-blue-400 border-blue-400/30">
+                  <Zap className="w-3 h-3" />
                   {unifiedStats?.lunar_crystals || 0} Crystals
-                </span>
-                <span className="text-muted-foreground">•</span>
-                <span className="text-amber-400 font-medium">
-                  {unifiedStats?.diamonds || 0} Diamonds
-                </span>
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1 text-amber-400 border-amber-400/30">
+                  <Gem className="w-3 h-3" />
+                  {unifiedStats?.total_exp || 0} EXP
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{profile?.email}</p>
+              {profile?.subscription_tier !== 'free' && (
+                <Badge className="mt-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                  {profile.subscription_tier.toUpperCase()} Member
+                </Badge>
+              )}
             </div>
             <Link to="/profile-edit">
               <Button variant="outline" size="sm" className="hover-glow">

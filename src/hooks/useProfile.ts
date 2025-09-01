@@ -48,7 +48,21 @@ export const useProfile = () => {
       }
 
       if (data) {
-        setProfile(data);
+        // Ensure all required fields are present with defaults
+        const profileData: Profile = {
+          id: data.id,
+          user_id: data.user_id,
+          display_name: data.display_name,
+          email: data.email || user.email,
+          avatar_url: data.avatar_url,
+          phone_number: data.phone_number,
+          subscription_tier: data.subscription_tier || 'free',
+          subscription_status: data.subscription_status || 'active',
+          trial_ends_at: data.trial_ends_at,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        setProfile(profileData);
       } else {
         await createProfile();
       }
@@ -68,13 +82,29 @@ export const useProfile = () => {
         .insert([{
           user_id: user.id,
           email: user.email,
-          display_name: user.user_metadata?.display_name || null,
+          display_name: user.user_metadata?.display_name || user.email?.split('@')[0] || null,
+          subscription_tier: 'free',
+          subscription_status: 'active'
         }])
         .select()
         .single();
 
       if (error) throw error;
-      setProfile(data);
+      
+      const profileData: Profile = {
+        id: data.id,
+        user_id: data.user_id,
+        display_name: data.display_name,
+        email: data.email,
+        avatar_url: data.avatar_url,
+        phone_number: data.phone_number,
+        subscription_tier: data.subscription_tier || 'free',
+        subscription_status: data.subscription_status || 'active',
+        trial_ends_at: data.trial_ends_at,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+      setProfile(profileData);
     } catch (error) {
       console.error('Error creating profile:', error);
       toast({
@@ -89,6 +119,20 @@ export const useProfile = () => {
     if (!user || !profile) return false;
 
     try {
+      // If email is being updated, also update auth user
+      if (updates.email && updates.email !== user.email) {
+        const { error: authError } = await supabase.auth.updateUser({
+          email: updates.email
+        });
+        
+        if (authError) {
+          toast({
+            title: "Info",
+            description: "Email update requires verification. Check your new email for confirmation.",
+          });
+        }
+      }
+
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
@@ -98,7 +142,21 @@ export const useProfile = () => {
 
       if (error) throw error;
 
-      setProfile(data);
+      const updatedProfile: Profile = {
+        id: data.id,
+        user_id: data.user_id,
+        display_name: data.display_name,
+        email: data.email,
+        avatar_url: data.avatar_url,
+        phone_number: data.phone_number,
+        subscription_tier: data.subscription_tier || 'free',
+        subscription_status: data.subscription_status || 'active',
+        trial_ends_at: data.trial_ends_at,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
+      setProfile(updatedProfile);
       toast({
         title: "Success",
         description: "Profile updated successfully.",
@@ -119,9 +177,38 @@ export const useProfile = () => {
     if (!user) return false;
 
     try {
+      // Validate file
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: "Error",
+          description: "Please select a valid image file.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: "File size must be less than 5MB.",
+          variant: "destructive"
+        });
+        return false;
+      }
+
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Date.now()}.${fileExt}`;
       
+      // Delete old avatar if exists
+      if (profile?.avatar_url) {
+        const oldFileName = profile.avatar_url.split('/').pop();
+        if (oldFileName) {
+          await supabase.storage
+            .from('avatars')
+            .remove([oldFileName]);
+        }
+      }
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true });
