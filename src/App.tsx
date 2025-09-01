@@ -18,6 +18,7 @@ import LevelHistory from "./pages/LevelHistory";
 import Shop from "./pages/Shop";
 import ExportData from "./pages/ExportData";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 import { useEXPIntegration } from "@/hooks/useEXPIntegration";
@@ -37,6 +38,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/*" element={
               <ProtectedRoute>
                 <div className="min-h-screen bg-background">

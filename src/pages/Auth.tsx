@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { LogIn, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { LunarCrystalLogo } from '@/components/LunarCrystalLogo';
 import { useToast } from '@/hooks/use-toast';
+import { ForgotPasswordDialog } from '@/components/ForgotPasswordDialog';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -20,6 +21,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -122,7 +124,6 @@ const Auth = () => {
           title: "Account created!",
           description: "Please check your email to verify your account.",
         });
-        // Don't navigate immediately, let them verify email first
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -232,6 +233,17 @@ const Auth = () => {
                     </Button>
                   </div>
                 </div>
+
+                <div className="flex justify-end">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="text-primary text-sm p-0 h-auto"
+                    onClick={() => setShowForgotPassword(true)}
+                  >
+                    Forgot password?
+                  </Button>
+                </div>
                 
                 <Button 
                   type="submit" 
@@ -331,6 +343,12 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Forgot Password Dialog */}
+      <ForgotPasswordDialog 
+        open={showForgotPassword}
+        onOpenChange={setShowForgotPassword}
+      />
     </div>
   );
 };

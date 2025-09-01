@@ -50,7 +50,6 @@ export const useProfile = () => {
       if (data) {
         setProfile(data);
       } else {
-        // Create profile if it doesn't exist
         await createProfile();
       }
     } catch (error) {
@@ -116,10 +115,41 @@ export const useProfile = () => {
     }
   };
 
+  const uploadAvatar = async (file: File) => {
+    if (!user) return false;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      await updateProfile({ avatar_url: publicUrl });
+      return true;
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload avatar.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   return {
     profile,
     loading,
     updateProfile,
+    uploadAvatar,
     refetch: fetchProfile
   };
 };

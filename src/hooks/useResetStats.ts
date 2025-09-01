@@ -5,7 +5,7 @@ import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
 
 export const useResetStats = () => {
-  const [isResetting, setIsResetting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -16,10 +16,10 @@ export const useResetStats = () => {
         description: "You must be logged in to reset stats.",
         variant: "destructive"
       });
-      return;
+      return false;
     }
 
-    setIsResetting(true);
+    setLoading(true);
     try {
       const { error } = await supabase.rpc('reset_user_stats', {
         p_user_id: user.id,
@@ -29,28 +29,28 @@ export const useResetStats = () => {
       if (error) throw error;
 
       toast({
-        title: "Stats Reset Successfully",
-        description: resetCrystals 
-          ? "All your progress including Lunar Crystals has been reset to zero."
-          : "Your progress has been reset, but Lunar Crystals were preserved.",
+        title: "Success",
+        description: "Your stats have been reset successfully.",
       });
-
-      // Force a page reload to refresh all hooks and data
+      
+      // Refresh the page to update all components
       window.location.reload();
+      return true;
     } catch (error) {
       console.error('Error resetting stats:', error);
       toast({
-        title: "Reset Failed",
-        description: "There was an error resetting your stats. Please try again.",
+        title: "Error",
+        description: "Failed to reset stats. Please try again.",
         variant: "destructive"
       });
+      return false;
     } finally {
-      setIsResetting(false);
+      setLoading(false);
     }
   };
 
   return {
     resetStats,
-    isResetting
+    loading
   };
 };
