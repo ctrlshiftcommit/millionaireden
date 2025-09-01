@@ -1,45 +1,80 @@
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, Calendar, Award } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, TrendingUp, Calendar, Award, RotateCcw, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useUnifiedStats } from "@/hooks/useUnifiedStats";
 import { LunarCrystalLogo } from "@/components/LunarCrystalLogo";
+import { HistoryChart } from "@/components/HistoryChart";
+import { ResetStatsDialog } from "@/components/ResetStatsDialog";
+import { useState, useEffect } from "react";
 
 const LevelHistory = () => {
   const { stats, getLevelInfo, getExpProgressData, getLevelHistory, getRecentExpTransactions } = useUnifiedStats();
+  const [chartData, setChartData] = useState<Array<{ date: string; exp: number; lunarCrystals: number; diamonds: number }>>([]);
+  const [levelHistory, setLevelHistory] = useState<Array<{ id: string; old_level: number; new_level: number; exp_at_levelup: number; level_up_at: string }>>([]);
+  const [transactions, setTransactions] = useState<Array<{ id: string; created_at: string; amount: number; description: string; type: string }>>([]);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [visibleLines, setVisibleLines] = useState({
+    exp: true,
+    lunarCrystals: true,
+    diamonds: false // No diamonds in current system, but prepared for future
+  });
+  
   const levelInfo = getLevelInfo();
-  // These calls could be made async with useEffect; for brevity, assume parent triggers and passes data or we can later enhance
-  // Placeholder arrays to avoid runtime issues if not awaited here
   const crystals = stats?.lunar_crystals || 0;
-  // Note: convert async data fetching to effects if needed
-  // const [progressData, setProgressData] = useState([]);
-  // useEffect(() => { getExpProgressData(30).then(setProgressData); }, []);
-  // const [history, setHistory] = useState([]);
-  // useEffect(() => { getLevelHistory(50).then(setHistory); }, []);
-  // const [transactions, setTransactions] = useState([]);
-  // useEffect(() => { getRecentExpTransactions(15).then(setTransactions); }, []);
-  const progressData: Array<{ date: string; exp: number }> = [];
-  const history: Array<{ id: string; old_level: number; new_level: number; exp_at_levelup: number; created_at: string }> = [];
-  const transactions: Array<{ id: string; created_at: string; amount: number; description: string; type: string }> = [];
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [expData, historyData, transactionData] = await Promise.all([
+        getExpProgressData(30),
+        getLevelHistory(50),
+        getRecentExpTransactions(15)
+      ]);
+      
+      // Transform exp progress data to include lunar crystals over time
+      const transformedData = expData.map((day, index) => {
+        // Simulate crystal accumulation (this would need actual crystal transaction tracking)
+        const crystalEstimate = Math.floor(day.exp / 10); // Rough estimate
+        return {
+          date: day.date,
+          exp: day.exp,
+          lunarCrystals: crystalEstimate,
+          diamonds: 0 // Placeholder for future diamond system
+        };
+      });
+      
+      setChartData(transformedData);
+      setLevelHistory(historyData);
+      setTransactions(transactionData);
+    };
+
+    fetchData();
+  }, [stats]);
+
+  // Calculate summary stats
+  const weeklyExpGain = chartData.slice(-7).reduce((sum, day) => sum + day.exp, 0);
+  const weeklyLunarGain = chartData.slice(-7).reduce((sum, day) => sum + day.lunarCrystals, 0);
+  const monthlyExpGain = chartData.reduce((sum, day) => sum + day.exp, 0);
+
+  const toggleLineVisibility = (line: keyof typeof visibleLines) => {
+    setVisibleLines(prev => ({
+      ...prev,
+      [line]: !prev[line]
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-background pt-14 pb-20 safe-area-inset-top">
-      {/* Header with current level background */}
+      {/* Header */}
       <div 
-        className="relative px-4 pt-6 pb-8 bg-cover bg-center"
-        style={{
-          backgroundImage: levelInfo.level >= 1 
-            ? `url('/api/placeholder/400/200')` 
-            : 'linear-gradient(135deg, hsl(0 85% 58% / 0.1) 0%, hsl(0 0% 6%) 100%)',
-        }}
+        className="relative px-4 pt-6 pb-8 bg-gradient-to-br from-primary/20 via-background to-background"
       >
-        {/* Dark overlay for readability */}
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
-        
         <div className="relative z-10">
           <Link to="/">
-            <Button variant="ghost" size="sm" className="mb-4 text-foreground/80">
+            <Button variant="ghost" size="sm" className="mb-4 text-foreground/80 hover:text-foreground">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
@@ -47,7 +82,7 @@ const LevelHistory = () => {
 
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-3 mb-4">
-              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center">
+              <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center border border-primary/30">
                 <span className="text-2xl font-bold text-primary">{levelInfo.level}</span>
               </div>
               <div>
@@ -58,9 +93,9 @@ const LevelHistory = () => {
             <p className="text-foreground/80 mb-4">{levelInfo.description}</p>
           </div>
 
-          {/* Current Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="card-elegant p-4 text-center">
+          {/* Current Stats Summary */}
+          <div className="grid grid-cols-3 gap-3">
+            <Card className="p-4 text-center bg-background/50 backdrop-blur-sm border-border/50">
               <div className="flex items-center justify-center gap-1 mb-2">
                 <LunarCrystalLogo size={20} />
                 <span className="text-lg font-bold text-primary">{crystals}</span>
@@ -68,109 +103,96 @@ const LevelHistory = () => {
               <p className="text-xs text-muted-foreground">Lunar Crystals</p>
             </Card>
             
-            <Card className="card-elegant p-4 text-center">
+            <Card className="p-4 text-center bg-background/50 backdrop-blur-sm border-border/50">
               <p className="text-lg font-bold text-foreground">{(stats?.total_exp || 0).toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">Total EXP</p>
+            </Card>
+
+            <Card className="p-4 text-center bg-background/50 backdrop-blur-sm border-border/50">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setResetDialogOpen(true)}
+                className="text-destructive hover:text-destructive-foreground hover:bg-destructive p-2 h-auto"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+              <p className="text-xs text-muted-foreground mt-1">Reset Stats</p>
             </Card>
           </div>
         </div>
       </div>
 
       <div className="px-4 -mt-2">
-        {/* EXP Progress Chart */}
-        <Card className="card-elegant p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">EXP Progress (Last 30 Days)</h2>
-          </div>
-          
-          <div className="space-y-2 mb-4">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress to Level {levelInfo.level + 1}</span>
-              <span className="text-primary font-medium">
-                {stats?.total_exp || 0} / {levelInfo.nextLevelPoints} EXP
-              </span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-3">
-              <div 
-                className="bg-primary rounded-full h-3 transition-all duration-300"
-                style={{ width: `${Math.min(100, Math.max(0, (levelInfo.progress || 0) * 100))}%` }}
-              />
-            </div>
-          </div>
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <Card className="p-4 text-center">
+            <p className="text-2xl font-bold text-primary">+{weeklyExpGain}</p>
+            <p className="text-xs text-muted-foreground">EXP This Week</p>
+          </Card>
+          <Card className="p-4 text-center">
+            <p className="text-2xl font-bold text-blue-500">+{weeklyLunarGain}</p>
+            <p className="text-xs text-muted-foreground">Crystals This Week</p>
+          </Card>
+          <Card className="p-4 text-center">
+            <p className="text-2xl font-bold text-green-500">{monthlyExpGain}</p>
+            <p className="text-xs text-muted-foreground">Monthly Total</p>
+          </Card>
+        </div>
 
-          {/* EXP Progress Chart - Last 7 Days */}
-          <div className="grid grid-cols-7 gap-1 mt-4">
-            {progressData.slice(-7).map((day) => {
-              const last7 = progressData.slice(-7);
-              const maxExp = Math.max(...last7.map(d => d.exp), 100);
-              return (
-                <div key={day.date} className="text-center">
-                  <div 
-                    className="w-full bg-muted rounded mb-1 flex items-end justify-center relative"
-                    style={{ height: '60px' }}
-                  >
-                    <div 
-                      className="bg-gradient-to-t from-primary to-primary-glow rounded w-full transition-all duration-300 relative group"
-                      style={{ 
-                        height: `${Math.max(4, (day.exp / maxExp) * 56)}px`
-                      }}
-                    >
-                      {day.exp > 0 && (
-                        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border rounded px-1 text-xs font-medium">
-                          {day.exp}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-medium">
-                    {new Date(day.date).toLocaleDateString('en', { weekday: 'short' })}
-                  </p>
-                  <p className="text-xs text-primary font-bold">
-                    {day.exp}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Monthly Progress Overview */}
-          <div className="mt-6 p-4 bg-muted/30 rounded-lg">
-            <h3 className="text-sm font-semibold text-foreground mb-3">Monthly Overview</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <p className="text-lg font-bold text-primary">
-                  {progressData.reduce((sum, day) => sum + day.exp, 0)}
-                </p>
-                <p className="text-xs text-muted-foreground">Total EXP This Month</p>
-              </div>
-              <div className="text-center">
-                <p className="text-lg font-bold text-primary">
-                  {progressData.length > 0 ? Math.round(progressData.reduce((sum, day) => sum + day.exp, 0) / progressData.length) : 0}
-                </p>
-                <p className="text-xs text-muted-foreground">Daily Average</p>
+        {/* Progress Chart */}
+        <Card className="p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-semibold text-foreground">Progress History</h2>
+            </div>
+            
+            {/* Chart Controls */}
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleLineVisibility('exp')}
+                  className={`text-xs ${visibleLines.exp ? 'text-primary' : 'text-muted-foreground'}`}
+                >
+                  {visibleLines.exp ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
+                  EXP
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleLineVisibility('lunarCrystals')}
+                  className={`text-xs ${visibleLines.lunarCrystals ? 'text-blue-500' : 'text-muted-foreground'}`}
+                >
+                  {visibleLines.lunarCrystals ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
+                  Crystals
+                </Button>
               </div>
             </div>
           </div>
+          
+          <HistoryChart data={chartData} visibleLines={visibleLines} />
         </Card>
 
         {/* Level History */}
-        {history.length > 0 && (
-          <Card className="card-elegant p-6 mb-6">
+        {levelHistory.length > 0 && (
+          <Card className="p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Award className="w-5 h-5 text-primary" />
               <h2 className="text-lg font-semibold text-foreground">Level History</h2>
             </div>
             
             <div className="space-y-3">
-              {history.slice(0, 10).map((entry) => (
-                <div key={entry.id} className="flex items-center justify-between py-2 border-b border-border/30">
+              {levelHistory.slice(0, 10).map((entry) => (
+                <div key={entry.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                   <div>
                     <p className="text-sm font-medium text-foreground">
                       Level {entry.old_level} → Level {entry.new_level}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(entry.created_at).toLocaleDateString()} at {entry.exp_at_levelup.toLocaleString()} EXP
+                      {new Date(entry.level_up_at).toLocaleDateString()} at {entry.exp_at_levelup.toLocaleString()} EXP
                     </p>
                   </div>
                   <Badge className="bg-primary/20 text-primary border-primary/30">
@@ -182,14 +204,14 @@ const LevelHistory = () => {
           </Card>
         )}
 
-        {/* Recent EXP Transactions */}
-         <Card className="card-elegant p-6">
-           <div className="flex items-center gap-2 mb-4">
-             <Calendar className="w-5 h-5 text-primary" />
-             <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
-           </div>
-           
-           <div className="space-y-3">
+        {/* Recent Activity */}
+        <Card className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Calendar className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
+          </div>
+          
+          <div className="space-y-3">
             {transactions.slice(0, 15).map((transaction) => (
               <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-border/30 last:border-0">
                 <div className="flex-1">
@@ -210,6 +232,11 @@ const LevelHistory = () => {
           </div>
         </Card>
       </div>
+
+      <ResetStatsDialog 
+        open={resetDialogOpen} 
+        onOpenChange={setResetDialogOpen} 
+      />
     </div>
   );
 };

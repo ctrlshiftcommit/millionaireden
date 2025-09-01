@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -38,7 +39,7 @@ interface LevelHistoryEntry {
 	old_level: number;
 	new_level: number;
 	exp_at_levelup: number;
-	created_at: string;
+	level_up_at: string;
 }
 
 interface ExpTransactionItem {
@@ -381,41 +382,41 @@ export const useUnifiedStats = () => {
 		return Array.from(byDate.entries()).map(([date, exp]) => ({ date, exp }));
 	};
 
-const getLevelHistory = async (limit: number = 50): Promise<LevelHistoryEntry[]> => {
-	if (!user) return [] as LevelHistoryEntry[];
+	const getLevelHistory = async (limit: number = 50): Promise<LevelHistoryEntry[]> => {
+		if (!user) return [];
 
-	const { data, error } = await supabase
-		.from('level_history')
-		.select('id, old_level, new_level, exp_at_levelup, created_at')
-		.eq('user_id', user.id)
-		.order('created_at', { ascending: false })
-		.limit(limit);
+		const { data, error } = await supabase
+			.from('level_history')
+			.select('id, old_level, new_level, exp_at_levelup, level_up_at')
+			.eq('user_id', user.id)
+			.order('level_up_at', { ascending: false })
+			.limit(limit);
 
-	if (error) {
-		console.error('Error fetching level history:', error);
-		return [] as LevelHistoryEntry[];
-	}
+		if (error) {
+			console.error('Error fetching level history:', error);
+			return [];
+		}
 
-	return (data as LevelHistoryEntry[]) || [] as LevelHistoryEntry[];
-};
+		return data || [];
+	};
 
-const getRecentExpTransactions = async (limit: number = 15): Promise<ExpTransactionItem[]> => {
-	if (!user) return [] as ExpTransactionItem[];
+	const getRecentExpTransactions = async (limit: number = 15): Promise<ExpTransactionItem[]> => {
+		if (!user) return [];
 
-	const { data, error } = await supabase
-		.from('exp_transactions')
-		.select('id, created_at, amount, description, type')
-		.eq('user_id', user.id)
-		.order('created_at', { ascending: false })
-		.limit(limit);
+		const { data, error } = await supabase
+			.from('exp_transactions')
+			.select('id, created_at, amount, description, type')
+			.eq('user_id', user.id)
+			.order('created_at', { ascending: false })
+			.limit(limit);
 
-	if (error) {
-		console.error('Error fetching EXP transactions:', error);
-		return [] as ExpTransactionItem[];
-	}
+		if (error) {
+			console.error('Error fetching EXP transactions:', error);
+			return [];
+		}
 
-	return (data as ExpTransactionItem[]) || [] as ExpTransactionItem[];
-};
+		return data || [];
+	};
 
 	const getHabitStats = async (): Promise<HabitStats> => {
 		if (!user) {
