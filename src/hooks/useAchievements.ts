@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -8,24 +9,21 @@ interface Achievement {
   name: string;
   description: string;
   icon: string;
-  requirement_type: string;
+  requirement_type: 'exp_total' | 'habit_streak' | 'habits_completed' | 'journal_entries' | 'level_reached';
   requirement_value: number;
   crystal_reward: number;
   is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface UserAchievement {
   id: string;
+  user_id: string;
   achievement_id: string;
-  earned_at: string;
   crystals_earned: number;
-  achievement: Achievement;
-}
-
-interface AchievementProgress {
-  achievement: Achievement;
-  progress: number;
-  isCompleted: boolean;
+  earned_at: string;
+  achievement?: Achievement;
 }
 
 export const useAchievements = () => {
@@ -37,164 +35,126 @@ export const useAchievements = () => {
 
   useEffect(() => {
     if (user) {
-      fetchAchievements();
-      fetchUserAchievements();
+      fetchData();
+    } else {
+      setLoading(false);
     }
   }, [user]);
 
-  const fetchAchievements = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('achievements')
-        .select('*')
-        .eq('is_active', true)
-        .order('requirement_value', { ascending: true });
-
-      if (error) throw error;
-      setAchievements(data || []);
-    } catch (error) {
-      console.error('Error fetching achievements:', error);
-    }
-  };
-
-  const fetchUserAchievements = async () => {
+  const fetchData = async () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Fetch all achievements
+      const { data: achievementsData, error: achievementsError } = await supabase
+        .from('achievements')
+        .select('*')
+        .eq('is_active', true)
+        .order('requirement_value');
+
+      if (achievementsError) throw achievementsError;
+
+      // Fetch user achievements
+      const { data: userAchievementsData, error: userAchievementsError } = await supabase
         .from('user_achievements')
         .select(`
           *,
           achievement:achievements(*)
         `)
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .order('earned_at', { ascending: false });
 
-      if (error) throw error;
-      setUserAchievements(data || []);
+      if (userAchievementsError) throw userAchievementsError;
+
+      setAchievements(achievementsData || []);
+      setUserAchievements(userAchievementsData || []);
     } catch (error) {
-      console.error('Error fetching user achievements:', error);
+      console.error('Error fetching achievements:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const checkAchievements = async (stats: {
-    totalCompleted?: number;
-    maxStreak?: number;
-    level?: number;
-    totalExp?: number;
+    totalExp: number;
+    currentLevel: number;
+    habitsCompleted: number;
+    journalEntries: number;
+    maxStreak: number;
   }) => {
     if (!user) return;
 
-    for (const achievement of achievements) {
-      // Skip if user already has this achievement
-      if (userAchievements.some(ua => ua.achievement_id === achievement.id)) {
-        continue;
-      }
+    const unlockedAchievements = achievements.filter(achievement => {
+      // Check if already unlocked
+      const alreadyUnlocked = userAchievements.some(ua => ua.achievement_id === achievement.id);
+      if (alreadyUnlocked) return false;
 
-      let shouldEarn = false;
-
+      // Check if requirements are met
       switch (achievement.requirement_type) {
-        case 'habits_completed':
-          shouldEarn = (stats.totalCompleted || 0) >= achievement.requirement_value;
-          break;
-        case 'max_streak':
-          shouldEarn = (stats.maxStreak || 0) >= achievement.requirement_value;
-          break;
+        case 'exp_total':
+          return stats.totalExp >= achievement.requirement_value;
         case 'level_reached':
-          shouldEarn = (stats.level || 0) >= achievement.requirement_value;
-          break;
-        case 'total_completed':
-          shouldEarn = (stats.totalCompleted || 0) >= achievement.requirement_value;
-          break;
-      }
-
-      if (shouldEarn) {
-        await earnAchievement(achievement);
-      }
-    }
-  };
-
-  const earnAchievement = async (achievement: Achievement) => {
-    if (!user) return;
-
-    try {
-      // Record the achievement
-      const { error: achievementError } = await supabase
-        .from('user_achievements')
-        .insert([{
-          user_id: user.id,
-          achievement_id: achievement.id,
-          crystals_earned: achievement.crystal_reward
-        }]);
-
-      if (achievementError) throw achievementError;
-
-      // Add crystals to user's balance - fetch current amount first
-      const { data: currentExp, error: fetchError } = await supabase
-        .from('user_experience')
-        .select('lunar_crystals')
-        .eq('user_id', user.id)
-        .single();
-
-      if (fetchError) {
-        console.error('Error fetching current crystals:', fetchError);
-      } else {
-        const { error: crystalError } = await supabase
-          .from('user_experience')
-          .update({
-            lunar_crystals: currentExp.lunar_crystals + achievement.crystal_reward
-          })
-          .eq('user_id', user.id);
-
-        if (crystalError) {
-          console.error('Error adding crystals:', crystalError);
-        }
-      }
-
-      // Show success notification
-      toast({
-        title: "🏆 Achievement Unlocked!",
-        description: `${achievement.name} - Earned ${achievement.crystal_reward} Lunar Crystals!`,
-      });
-
-      // Refresh user achievements
-      await fetchUserAchievements();
-
-    } catch (error) {
-      console.error('Error earning achievement:', error);
-    }
-  };
-
-  const getAchievementProgress = (stats: {
-    totalCompleted?: number;
-    maxStreak?: number;
-    level?: number;
-    totalExp?: number;
-  }): AchievementProgress[] => {
-    return achievements.map(achievement => {
-      const isCompleted = userAchievements.some(ua => ua.achievement_id === achievement.id);
-      
-      let progress = 0;
-      switch (achievement.requirement_type) {
+          return stats.currentLevel >= achievement.requirement_value;
         case 'habits_completed':
-        case 'total_completed':
-          progress = Math.min((stats.totalCompleted || 0) / achievement.requirement_value, 1);
-          break;
-        case 'max_streak':
-          progress = Math.min((stats.maxStreak || 0) / achievement.requirement_value, 1);
-          break;
-        case 'level_reached':
-          progress = Math.min((stats.level || 0) / achievement.requirement_value, 1);
-          break;
+          return stats.habitsCompleted >= achievement.requirement_value;
+        case 'journal_entries':
+          return stats.journalEntries >= achievement.requirement_value;
+        case 'habit_streak':
+          return stats.maxStreak >= achievement.requirement_value;
+        default:
+          return false;
       }
-
-      return {
-        achievement,
-        progress: isCompleted ? 1 : progress,
-        isCompleted
-      };
     });
+
+    // Award unlocked achievements
+    for (const achievement of unlockedAchievements) {
+      try {
+        const { error } = await supabase
+          .from('user_achievements')
+          .insert([{
+            user_id: user.id,
+            achievement_id: achievement.id,
+            crystals_earned: achievement.crystal_reward
+          }]);
+
+        if (error) throw error;
+
+        toast({
+          title: "🎉 Achievement Unlocked!",
+          description: `${achievement.name}: +${achievement.crystal_reward} Lunar Crystals!`,
+        });
+      } catch (error) {
+        console.error('Error awarding achievement:', error);
+      }
+    }
+
+    if (unlockedAchievements.length > 0) {
+      await fetchData(); // Refresh data
+    }
+
+    return unlockedAchievements;
+  };
+
+  const getProgress = (achievement: Achievement, stats: any) => {
+    let current = 0;
+    switch (achievement.requirement_type) {
+      case 'exp_total':
+        current = stats?.totalExp || 0;
+        break;
+      case 'level_reached':
+        current = stats?.currentLevel || 0;
+        break;
+      case 'habits_completed':
+        current = stats?.habitsCompleted || 0;
+        break;
+      case 'journal_entries':
+        current = stats?.journalEntries || 0;
+        break;
+      case 'habit_streak':
+        current = stats?.maxStreak || 0;
+        break;
+    }
+    return Math.min(current / achievement.requirement_value, 1);
   };
 
   return {
@@ -202,10 +162,7 @@ export const useAchievements = () => {
     userAchievements,
     loading,
     checkAchievements,
-    getAchievementProgress,
-    refetch: () => {
-      fetchAchievements();
-      fetchUserAchievements();
-    }
+    getProgress,
+    refetch: fetchData
   };
 };

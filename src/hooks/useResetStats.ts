@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -8,7 +9,7 @@ export const useResetStats = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const resetStats = async () => {
+  const resetStats = async (resetCrystals: boolean = false) => {
     if (!user) {
       toast({
         title: "Error",
@@ -21,17 +22,20 @@ export const useResetStats = () => {
     setIsResetting(true);
     try {
       const { error } = await supabase.rpc('reset_user_stats', {
-        p_user_id: user.id
+        p_user_id: user.id,
+        reset_crystals: resetCrystals
       });
 
       if (error) throw error;
 
       toast({
         title: "Stats Reset Successfully",
-        description: "All your progress has been reset to zero. You can start fresh!",
+        description: resetCrystals 
+          ? "All your progress including Lunar Crystals has been reset to zero."
+          : "Your progress has been reset, but Lunar Crystals were preserved.",
       });
 
-      // Force a page reload to refresh all the hooks and data
+      // Force a page reload to refresh all hooks and data
       window.location.reload();
     } catch (error) {
       console.error('Error resetting stats:', error);

@@ -280,6 +280,57 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_pictures: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          is_active: boolean | null
+          is_primary: boolean | null
+          mime_type: string
+          public_url: string
+          storage_url: string
+          updated_at: string
+          upload_status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          mime_type: string
+          public_url: string
+          storage_url: string
+          updated_at?: string
+          upload_status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          mime_type?: string
+          public_url?: string
+          storage_url?: string
+          updated_at?: string
+          upload_status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -639,6 +690,10 @@ export type Database = {
     Functions: {
       check_daily_progress_notification: {
         Args: { p_user_id: string }
+        Returns: undefined
+      }
+      cleanup_old_profile_pictures: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       reset_user_stats: {

@@ -1,51 +1,69 @@
 
 import React, { useState } from 'react';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useResetStats } from "@/hooks/useResetStats";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AlertTriangle, Loader2 } from 'lucide-react';
+import { useResetStats } from '@/hooks/useResetStats';
 
 interface ResetStatsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const ResetStatsDialog: React.FC<ResetStatsDialogProps> = ({ open, onOpenChange }) => {
-  const [resetLunarCrystals, setResetLunarCrystals] = useState(false);
+export const ResetStatsDialog: React.FC<ResetStatsDialogProps> = ({
+  open,
+  onOpenChange,
+}) => {
+  const [resetCrystals, setResetCrystals] = useState(false);
   const { resetStats, isResetting } = useResetStats();
 
-  const handleReset = async () => {
-    await resetStats();
+  const handleConfirm = async () => {
+    await resetStats(resetCrystals);
     onOpenChange(false);
-    setResetLunarCrystals(false);
+    setResetCrystals(false);
+  };
+
+  const handleCancel = () => {
+    onOpenChange(false);
+    setResetCrystals(false);
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="text-destructive">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-destructive">
+            <AlertTriangle className="h-5 w-5" />
             Reset All Stats
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to reset your stats? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        
-        <div className="py-4">
+          </DialogTitle>
+          <DialogDescription className="space-y-4 pt-2">
+            <p>
+              Are you sure you want to reset your stats? This action cannot be undone and will:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>Reset your EXP to 0</li>
+              <li>Reset your level to 0</li>
+              <li>Clear all habit completions</li>
+              <li>Clear all achievements</li>
+              <li>Clear level history</li>
+              <li>Clear reward purchases</li>
+            </ul>
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
           <div className="flex items-center space-x-2">
             <Checkbox
               id="reset-crystals"
-              checked={resetLunarCrystals}
-              onCheckedChange={(checked) => setResetLunarCrystals(checked as boolean)}
+              checked={resetCrystals}
+              onCheckedChange={setResetCrystals}
             />
             <label
               htmlFor="reset-crystals"
@@ -54,25 +72,34 @@ export const ResetStatsDialog: React.FC<ResetStatsDialogProps> = ({ open, onOpen
               Also reset Lunar Crystals
             </label>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            {resetLunarCrystals 
-              ? "All stats including Lunar Crystals will be reset to zero."
-              : "EXP and level will be reset, but Lunar Crystals will be kept."
-            }
-          </p>
+          
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="flex-1"
+              disabled={isResetting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirm}
+              className="flex-1"
+              disabled={isResetting}
+            >
+              {isResetting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Resetting...
+                </>
+              ) : (
+                'Confirm Reset'
+              )}
+            </Button>
+          </div>
         </div>
-
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleReset}
-            disabled={isResetting}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isResetting ? "Resetting..." : "Confirm Reset"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      </DialogContent>
+    </Dialog>
   );
 };
