@@ -37,8 +37,8 @@ This guide will help you build an APK file for your Habit Realm Quest app using 
 ## Step 3: Initialize Capacitor
 
 Capacitor is already configured in this project. The config file `capacitor.config.ts` includes:
-- App ID: `app.lovable.514950caff5d4568821ac78ec64ce7b4`
-- App Name: `habit-realm-quest`
+- App ID: `com.millionaireden.app`
+- App Name: `Millionaire Den`
 - Hot reload URL for development
 
 ## Step 4: Add Android Platform

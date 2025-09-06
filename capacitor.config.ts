@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.514950caff5d4568821ac78ec64ce7b4',
-  appName: 'habit-realm-quest',
+  appId: 'com.millionaireden.app',
+  appName: 'Millionaire Den',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
