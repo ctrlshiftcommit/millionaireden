@@ -23,12 +23,14 @@ import NotFound from "./pages/NotFound";
 
 import { useEXPIntegration } from "@/hooks/useEXPIntegration";
 import { useLunarCrystalIntegration } from "@/hooks/useLunarCrystalIntegration";
+import { useTheme } from "@/hooks/useTheme";
 
 const queryClient = new QueryClient();
 
 function App() {
   useEXPIntegration();
   useLunarCrystalIntegration();
+  useTheme(); // Initialize theme system
   
   return (
     <QueryClientProvider client={queryClient}>

@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { 
   Bell,
+  Sun,
   Moon,
   Volume2,
   Trash2,
@@ -15,22 +16,25 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnifiedStats } from "@/hooks/useUnifiedStats";
+import { useTheme } from "@/hooks/useTheme";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { ResetStatsDialog } from "@/components/ResetStatsDialog";
 import { Link } from "react-router-dom";
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const { stats } = useUnifiedStats();
+  const { theme, setTheme } = useTheme();
+  const { playClick } = useSoundEffects();
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [settings, setSettings] = useState({
     notifications: true,
-    darkMode: true,
-    sounds: false,
+    sounds: true,
   });
 
   useEffect(() => {
     // Load settings from localStorage
-    const storedSettings = localStorage.getItem('app-settings');
+    const storedSettings = localStorage.getItem('appSettings');
     if (storedSettings) {
       setSettings(JSON.parse(storedSettings));
     }
@@ -38,14 +42,20 @@ const Settings = () => {
 
   useEffect(() => {
     // Save settings to localStorage
-    localStorage.setItem('app-settings', JSON.stringify(settings));
+    localStorage.setItem('appSettings', JSON.stringify(settings));
   }, [settings]);
 
   const handleSettingChange = (setting: string, value: boolean) => {
+    playClick();
     setSettings(prevSettings => ({
       ...prevSettings,
       [setting]: value,
     }));
+  };
+
+  const handleThemeChange = (newTheme: 'light' | 'dark') => {
+    playClick();
+    setTheme(newTheme);
   };
 
   return (
@@ -95,16 +105,28 @@ const Settings = () => {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Moon className="w-5 h-5 text-muted-foreground" />
+                {theme === 'dark' ? <Moon className="w-5 h-5 text-muted-foreground" /> : <Sun className="w-5 h-5 text-muted-foreground" />}
                 <div>
-                  <p className="text-foreground">Dark Mode</p>
-                  <p className="text-sm text-muted-foreground">Use dark theme</p>
+                  <p className="text-foreground">Theme</p>
+                  <p className="text-sm text-muted-foreground">Choose your preferred theme</p>
                 </div>
               </div>
-              <Switch
-                checked={settings.darkMode}
-                onCheckedChange={(checked) => handleSettingChange('darkMode', checked)}
-              />
+              <div className="flex gap-2">
+                <Button
+                  variant={theme === 'light' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleThemeChange('light')}
+                >
+                  <Sun className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={theme === 'dark' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handleThemeChange('dark')}
+                >
+                  <Moon className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
