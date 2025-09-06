@@ -13,7 +13,7 @@ import { useRef } from "react";
 
 const ExportData = () => {
   const { stats } = useUnifiedStats();
-  const { profile, userExp } = useProfile();
+  const { profile } = useProfile();
   const { entries, exportEntries, importEntries } = useJournalLocal();
   const { purchases } = useSupabaseRewards();
   const { userAchievements } = useAchievements();

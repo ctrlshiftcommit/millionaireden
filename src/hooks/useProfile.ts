@@ -56,8 +56,8 @@ export const useProfile = () => {
           email: data.email || user.email,
           avatar_url: data.avatar_url,
           phone_number: data.phone_number,
-          subscription_tier: data.subscription_tier || 'free',
-          subscription_status: data.subscription_status || 'active',
+        subscription_tier: data.subscription_tier as 'free' | 'premium' | 'enterprise' || 'free',
+        subscription_status: data.subscription_status as 'active' | 'cancelled' | 'expired' | 'trial' || 'active',
           trial_ends_at: data.trial_ends_at,
           created_at: data.created_at,
           updated_at: data.updated_at
@@ -98,8 +98,8 @@ export const useProfile = () => {
         email: data.email,
         avatar_url: data.avatar_url,
         phone_number: data.phone_number,
-        subscription_tier: data.subscription_tier || 'free',
-        subscription_status: data.subscription_status || 'active',
+        subscription_tier: data.subscription_tier as 'free' | 'premium' | 'enterprise' || 'free',
+        subscription_status: data.subscription_status as 'active' | 'cancelled' | 'expired' | 'trial' || 'active',
         trial_ends_at: data.trial_ends_at,
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -149,8 +149,8 @@ export const useProfile = () => {
         email: data.email,
         avatar_url: data.avatar_url,
         phone_number: data.phone_number,
-        subscription_tier: data.subscription_tier || 'free',
-        subscription_status: data.subscription_status || 'active',
+        subscription_tier: data.subscription_tier as 'free' | 'premium' | 'enterprise' || 'free',
+        subscription_status: data.subscription_status as 'active' | 'cancelled' | 'expired' | 'trial' || 'active',
         trial_ends_at: data.trial_ends_at,
         created_at: data.created_at,
         updated_at: data.updated_at

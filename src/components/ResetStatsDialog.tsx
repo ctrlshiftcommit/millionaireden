@@ -21,7 +21,7 @@ interface ResetStatsDialogProps {
 
 export const ResetStatsDialog = ({ open, onOpenChange }: ResetStatsDialogProps) => {
   const [resetCrystals, setResetCrystals] = useState(false);
-  const { resetStats, loading } = useResetStats();
+  const { resetStats, isResetting } = useResetStats();
 
   const handleReset = async () => {
     const success = await resetStats(resetCrystals);
@@ -69,15 +69,15 @@ export const ResetStatsDialog = ({ open, onOpenChange }: ResetStatsDialogProps) 
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>
+          <AlertDialogCancel disabled={isResetting}>
             Cancel
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleReset}
-            disabled={loading}
+            disabled={isResetting}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {loading ? 'Resetting...' : 'Confirm Reset'}
+            {isResetting ? 'Resetting...' : 'Confirm Reset'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
