@@ -26,6 +26,12 @@ export const useResetStats = () => {
         description: "Your stats have been reset successfully.",
       });
 
+      // Clear localStorage data to ensure clean state
+      localStorage.removeItem('millionaire-den-habits');
+      localStorage.removeItem('millionaire-den-achievements');
+      localStorage.removeItem('millionaire-den-xp');
+      localStorage.removeItem('millionaire-den-level');
+      
       // Trigger a page reload to refresh all data
       window.location.reload();
       

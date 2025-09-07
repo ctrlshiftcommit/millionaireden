@@ -51,7 +51,7 @@ export const ProfileTabs = ({
 }: ProfileTabsProps) => {
   return (
     <>
-      {/* Enhanced Tabs */}
+      {/* Enhanced Tabs with better labels */}
       <div className="flex space-x-1 mb-6 bg-muted rounded-lg p-1 animate-fadeInScale">
         <button
           onClick={() => setActiveTab("overview")}
@@ -61,7 +61,7 @@ export const ProfileTabs = ({
               : "text-muted-foreground hover:text-foreground hover-glow"
           }`}
         >
-          Overview
+          📊 Dashboard
         </button>
         <button
           onClick={() => setActiveTab("habits")}
@@ -71,7 +71,7 @@ export const ProfileTabs = ({
               : "text-muted-foreground hover:text-foreground hover-glow"
           }`}
         >
-          Habits
+          ✅ My Habits
           {habits.length > 0 && (
             <Badge className="ml-2 bg-primary/20 text-primary text-xs">
               {habits.length}
@@ -86,7 +86,7 @@ export const ProfileTabs = ({
               : "text-muted-foreground hover:text-foreground hover-glow"
           }`}
         >
-          Awards
+          🏆 Awards
           {userAchievements.length > 0 && (
             <Badge className="ml-2 bg-primary/20 text-primary text-xs">
               {userAchievements.length}
@@ -157,7 +157,10 @@ export const ProfileTabs = ({
       {activeTab === "habits" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">My Habits</h2>
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Daily Habits</h2>
+              <p className="text-sm text-muted-foreground">Build consistency and earn rewards</p>
+            </div>
             <Button 
               size="sm" 
               className="gradient-primary text-white"
@@ -170,39 +173,66 @@ export const ProfileTabs = ({
 
           {/* Add Habit Form */}
           {showAddHabit && (
-            <Card className="card-elegant p-4">
+            <Card className="card-elegant p-4 border-primary/20">
               <div className="space-y-3">
-                <Input
-                  placeholder="Habit name..."
-                  value={newHabit.name}
-                  onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
-                />
-                <Input
-                  placeholder="Description (optional)..."
-                  value={newHabit.description}
-                  onChange={(e) => setNewHabit({ ...newHabit, description: e.target.value })}
-                />
-                <div className="flex gap-2">
-                  {colors.map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setNewHabit({ ...newHabit, color })}
-                      className={`w-8 h-8 rounded-full ${color} ${newHabit.color === color ? 'ring-2 ring-primary' : ''}`}
-                    />
-                  ))}
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Habit Name</label>
+                  <Input
+                    placeholder="e.g., Morning Exercise, Read 20 minutes..."
+                    value={newHabit.name}
+                    onChange={(e) => setNewHabit({ ...newHabit, name: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Description (Optional)</label>
+                  <Input
+                    placeholder="Add details about your habit..."
+                    value={newHabit.description}
+                    onChange={(e) => setNewHabit({ ...newHabit, description: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-2 block">Choose Color</label>
+                  <div className="flex gap-2">
+                    {colors.map(color => (
+                      <button
+                        key={color}
+                        onClick={() => setNewHabit({ ...newHabit, color })}
+                        style={{ backgroundColor: color }}
+                        className={`w-8 h-8 rounded-full ${newHabit.color === color ? 'ring-2 ring-primary' : ''}`}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={handleAddHabit} size="sm">Save</Button>
+                  <Button onClick={handleAddHabit} size="sm">Save Habit</Button>
                   <Button variant="outline" size="sm" onClick={() => setShowAddHabit(false)}>Cancel</Button>
                 </div>
               </div>
             </Card>
           )}
 
+          {habits.length === 0 && !showAddHabit && (
+            <Card className="card-elegant p-8 text-center">
+              <div className="text-muted-foreground mb-4">
+                <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <h3 className="text-lg font-medium mb-2">No habits yet</h3>
+                <p className="text-sm">Create your first habit to start building consistency and earning rewards!</p>
+              </div>
+              <Button onClick={() => setShowAddHabit(true)} className="mt-4">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Habit
+              </Button>
+            </Card>
+          )}
+
           {habits.map((habit) => (
             <Card key={habit.id} className="card-interactive p-4 hover-glow animate-slideInUp group" onClick={() => handleCompleteHabit(habit.id)}>
               <div className="flex items-center gap-3 mb-3">
-                <div className={`w-3 h-3 rounded-full ${habit.color}`} />
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: habit.color }}
+                />
                 <div className="flex-1">
                   <h3 className="font-medium text-foreground">{habit.name}</h3>
                   <p className="text-sm text-muted-foreground">{habit.description}</p>

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { useHabits } from "@/hooks/useHabits";
+import { useSupabaseHabits } from "@/hooks/useSupabaseHabits";
 import { useProgressTracking } from "@/hooks/useProgressTracking";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useProfile } from "@/hooks/useProfile";
@@ -23,7 +23,7 @@ import { ProfileStats } from "@/components/ProfileStats";
 import { ProfileTabs } from "@/components/ProfileTabs";
 
 const Profile = () => {
-  const { habits, completeHabit, addHabit, deleteHabit, getHabitStats } = useHabits();
+  const { habits, completeHabit, addHabit, deleteHabit, getHabitStats, loading: habitsLoading } = useSupabaseHabits();
   const { progressStats, loading: progressLoading } = useProgressTracking();
   const { checkDailyProgress } = useNotifications();
   const { profile, loading: profileLoading } = useProfile();
@@ -31,7 +31,7 @@ const Profile = () => {
   const { userAchievements, getAchievementProgress } = useAchievements();
   const [activeTab, setActiveTab] = useState("overview");
   const [showAddHabit, setShowAddHabit] = useState(false);
-  const [newHabit, setNewHabit] = useState({ name: "", description: "", color: "bg-blue-500", goal: "daily" as const });
+  const [newHabit, setNewHabit] = useState({ name: "", description: "", color: "#6366f1", goal: "daily" as const });
 
   const stats = getHabitStats();
   const achievementProgress = getAchievementProgress(stats);
@@ -39,9 +39,11 @@ const Profile = () => {
 
   const handleAddHabit = async () => {
     if (!newHabit.name.trim()) return;
-    await addHabit(newHabit);
-    setNewHabit({ name: "", description: "", color: "bg-blue-500", goal: "daily" });
-    setShowAddHabit(false);
+    const success = await addHabit(newHabit);
+    if (success) {
+      setNewHabit({ name: "", description: "", color: "#6366f1", goal: "daily" });
+      setShowAddHabit(false);
+    }
   };
 
   const handleCompleteHabit = async (habitId: string) => {
@@ -49,7 +51,7 @@ const Profile = () => {
     await checkDailyProgress();
   };
 
-  const colors = ["bg-green-500", "bg-blue-500", "bg-purple-500", "bg-orange-500", "bg-pink-500", "bg-yellow-500"];
+  const colors = ["#22c55e", "#3b82f6", "#8b5cf6", "#f97316", "#ec4899", "#eab308"];
 
   const profileStats = {
     longestStreak: stats.longestStreak,
@@ -61,7 +63,7 @@ const Profile = () => {
     diamonds: 0 // Will be updated when available
   };
 
-  if (profileLoading) {
+  if (profileLoading || habitsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
